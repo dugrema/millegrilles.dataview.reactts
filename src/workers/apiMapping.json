@@ -1,0 +1,12 @@
+{
+  "defaults": {
+    "domain": "DataCollector",
+    "exchange": "2.prive"
+  },
+  "requests": [
+  ],
+  "commands": [
+  ],
+  "subscriptions": {
+  }
+}
