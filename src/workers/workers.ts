@@ -9,6 +9,13 @@ export type AppWorkers = {
     connection: Remote<AppsConnectionWorker>
 };
 
+export type WorkersState = {
+    workers?: AppWorkers | null,
+    ready?: boolean,
+    username?: string | null,
+    connectionState?: ConnectionCallbackParameters | null,
+};
+
 const SOCKETIO_PATH = '/millegrilles/socket.io';
 
 let workersOuterTriggered = false;

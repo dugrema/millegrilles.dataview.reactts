@@ -1,11 +1,11 @@
 import {useMemo} from "react";
-import useWorkers from "./workers/workers.ts";
 import {Link, useLocation} from "react-router-dom";
 
 import HomeIcon from './assets/home-1-svgrepo-com.svg';
 import SearchIcon from './assets/search-svgrepo-com.svg';
 import SettingIcon from './assets/settings-svgrepo-com.svg';
 import LogoutIcon from './assets/logout-svgrepo-com.svg';
+import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 
 const selectedClassname = ' bg-indigo-500';
 const unselectedClassname = ' bg-indigo-900 bg-opacity-30';
@@ -13,7 +13,9 @@ const unselectedClassname = ' bg-indigo-900 bg-opacity-30';
 function Menu() {
 
     const location = useLocation();
-    const [, ready] = useWorkers();
+    const {ready} = useWorkers();
+
+    console.info("useContext in Menu: ready = ", ready);
 
     const cssDisconnected = useMemo(()=>{
         if(!ready) return ' bg-red-500';
