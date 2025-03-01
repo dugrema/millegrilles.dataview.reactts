@@ -47,7 +47,7 @@ function useWorkers() {
         console.debug("connectionCallbackParams", connectionCallbackParams);
         if(!connectionCallbackParams) return false;
         return connectionCallbackParams?.connected && connectionCallbackParams?.authenticated;
-    }, [connectionCallbackParams])
+    }, [connectionCallbackParams]);
 
     // Initialize workers
     useEffect(()=>{
