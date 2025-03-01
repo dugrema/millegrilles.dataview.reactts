@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@solana/webcrypto-ed25519-polyfill": "2.0.0-preview.3",
+    "@yoursunny/webcrypto-ed25519": "^0.0.20250208",
     "axios": "^1.7.3",
     "comlink": "^4.4.2",
     "millegrilles.cryptography": "github:dugrema/millegrilles.cryptography.ts",
@@ -34,6 +35,7 @@
     "globals": "^15.15.0",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "vite-plugin-node-polyfills": "^0.23.0"
   }
 }

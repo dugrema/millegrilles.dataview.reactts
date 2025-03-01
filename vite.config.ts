@@ -1,6 +1,7 @@
 import {defineConfig, UserConfig} from 'vite'
-import react from '@vitejs/plugin-react'
+import react from '@vitejs/plugin-react';
 // import { comlink } from "vite-plugin-comlink";
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import fs from 'fs';
 
 export default defineConfig(({command})=> {
@@ -9,6 +10,12 @@ export default defineConfig(({command})=> {
         base: '/dataviewer',
         plugins: [
             // comlink(),
+            nodePolyfills({ include: [
+                // For libsodium
+                'crypto', 'stream', 'vm',
+                // For solana
+                'process',
+                ] }),
             react(),
         ]
     } as UserConfig;

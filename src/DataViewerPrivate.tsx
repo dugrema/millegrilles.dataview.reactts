@@ -1,4 +1,5 @@
 import useWorkers from "./workers/workers.ts";
+// import '@solana/webcrypto-ed25519-polyfill';
 
 function DataViewerPrivate() {
 
