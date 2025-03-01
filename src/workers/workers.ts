@@ -12,14 +12,14 @@ export type AppWorkers = {
 const SOCKETIO_PATH = '/millegrilles/socket.io';
 
 let workersOuterTriggered = false;
-let workersOuter: AppWorkers | null = null;
+// let workersOuter: AppWorkers | null = null;
 
 async function initializeOuterWorkers(cb: (params: ConnectionCallbackParameters) => void) {
-    if(workersOuterTriggered) {
-        console.warn("Subsequent call to initializeOuterWorkers");
-        return;
-    }
-    workersOuterTriggered = true;
+    // if(workersOuterTriggered) {
+    //     console.warn("Subsequent call to initializeOuterWorkers");
+    //     return;
+    // }
+    // workersOuterTriggered = true;
 
     const username = await verifyAuthentication();
     console.debug("Username %s", username);
@@ -28,7 +28,7 @@ async function initializeOuterWorkers(cb: (params: ConnectionCallbackParameters)
     }
     const cbProxy = proxy(cb);
     const result = await initializeWorkers(cbProxy);
-    workersOuter = result.workers;
+    // workersOuter = result.workers;
 
     console.debug("Connecting...");
     const response = await result.workers.connection.connect();
@@ -51,10 +51,17 @@ function useWorkers() {
 
     // Initialize workers
     useEffect(()=>{
-        if(workers) return;
-        if(workersOuter) {
-            setWorkers(workersOuter);
-        }  // Intake the workersOuter instance
+        if(workers) {
+            // Cleanup workers when closing private section
+            return () => {
+                // Timeout to avoid double-load in dev
+                setTimeout(()=>{workersOuterTriggered = false;}, 5);
+            };
+        }
+
+        if(workersOuterTriggered) return;
+        workersOuterTriggered = true;
+
         initializeOuterWorkers(setConnectionCallbackParams).then((result) => {
             if(result) {
                 setWorkers(result.result.workers);
