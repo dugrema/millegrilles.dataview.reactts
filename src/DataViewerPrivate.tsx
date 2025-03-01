@@ -8,7 +8,7 @@ function DataViewerPrivate() {
         return <>Your account is loading...</>;
     }
 
-    return <>Private</>;
+    return <>Private ready</>;
 }
 
 export default DataViewerPrivate;

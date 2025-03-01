@@ -10,14 +10,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@solana/webcrypto-ed25519-polyfill": "2.0.0-preview.3",
     "axios": "^1.7.3",
-    "comlink": "^4.4.1",
+    "comlink": "^4.4.2",
     "millegrilles.cryptography": "github:dugrema/millegrilles.cryptography.ts",
     "millegrilles.reactdeps.typescript": "github:dugrema/millegrilles.reactdeps.typescript",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-error-boundary": "^5.0.0",
-    "react-router-dom": "^7.2.0"
+    "react-router-dom": "^7.2.0",
+    "vite-plugin-comlink": "^5.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

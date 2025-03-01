@@ -4,9 +4,9 @@
     "exchange": "2.prive"
   },
   "requests": [
+    {"domain": "CoreTopologie", "action": "getFilehosts", "exchange": "1.public"}
   ],
   "commands": [
-  ],
-  "subscriptions": {
-  }
+    {"domain": "SenseursPassifs", "action": "challengeAppareil"}
+  ]
 }

@@ -3,11 +3,16 @@ import {ErrorPage} from "./Error.tsx";
 import {createBrowserRouter, RouterProvider} from "react-router-dom";
 
 import './App.css'
+import WelcomePage from "./WelcomePage.tsx";
 
 const DataViewerPrivate = lazy(()=>import('./DataViewerPrivate'));
 
 const router = createBrowserRouter([
     {
+        path: "/dataviewer",
+        element: <WelcomePage />,
+        errorElement: <ErrorPage />
+    },{
         path: "/dataviewer/private",
         element: <DataViewerPrivate />,
         errorElement: <ErrorPage />

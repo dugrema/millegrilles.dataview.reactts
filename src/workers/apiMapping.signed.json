@@ -1,0 +1,16 @@
+{
+  "pubkey": "90423740b9bb822fd5b673252fc79c82c77fb8fbd4162efbaebafeaefcef4015",
+  "estampille": 1740835909,
+  "kind": 2,
+  "contenu": "{\"commands\":[{\"action\":\"challengeAppareil\",\"domain\":\"SenseursPassifs\"}],\"defaults\":{\"domain\":\"DataCollector\",\"exchange\":\"2.prive\"},\"requests\":[{\"action\":\"getFilehosts\",\"domain\":\"CoreTopologie\",\"exchange\":\"1.public\"}]}",
+  "routage": {
+    "action": "configuration",
+    "domaine": "webapi"
+  },
+  "id": "e168295b04bcf0a81b9e1713ae0bc01b8b69df87638658a9bf74bd394d1560ff",
+  "sig": "b66e098a65c63639ec83db0d469cc79b2e1ffe9e2258a9693918abae174dc36eae1531d97d09ed3f2c0a1fd669aebf569ea351beeeefc55796b9dd2c044c7400",
+  "certificat": [
+    "-----BEGIN CERTIFICATE-----\nMIIBqjCCAVygAwIBAgIUSiBPpLsf0XPSPMI2hYbxRYny+xYwBQYDK2VwMBYxFDAS\nBgNVBAMTC01pbGxlR3JpbGxlMB4XDTI1MDIwNTE0NDE1NFoXDTI1MDMwODE0NDIx\nNFowazESMBAGA1UEAwwJU2lnbmF0dXJlMRIwEAYDVQQLDAlzaWduYXR1cmUxQTA/\nBgNVBAoMOHplWW5jUnFFcVo2ZVRFbVVaOHdoSkZ1SEc3OTZlU3ZDVFdFNE00MzJp\nelhycDIyYkF0d0dtN0pmMCowBQYDK2VwAyEAkEI3QLm7gi/VtnMlL8ecgsd/uPvU\nFi77rrr+rvzvQBWjZzBlMCMGBCoDBAEEG3NpZ25hdHVyZSxjYXRhbG9ndWVzLHdl\nYmFwaTAfBgNVHSMEGDAWgBTTiP/MFw4DDwXqQ/J2LLYPRUkkETAdBgNVHQ4EFgQU\nP+/IWfVvYG1KML09seEu7b3rHlwwBQYDK2VwA0EAscc8b+L2w97WDmKaLPvlsfAh\narX3v070N6KeeNs2CtdXkDNxl0MpI2w4DbJLSRST0iCiXgvVOaE4Fq5dDsXTAA==\n-----END CERTIFICATE-----"
+  ],
+  "millegrille": "-----BEGIN CERTIFICATE-----\nMIIBQzCB9qADAgECAgoHBykXJoaCCWAAMAUGAytlcDAWMRQwEgYDVQQDEwtNaWxs\nZUdyaWxsZTAeFw0yMjAxMTMyMjQ3NDBaFw00MjAxMTMyMjQ3NDBaMBYxFDASBgNV\nBAMTC01pbGxlR3JpbGxlMCowBQYDK2VwAyEAnnixameVCZAzfx4dO+L63DOk/34I\n/TC4fIA1Rxn19+KjYDBeMA8GA1UdEwEB/wQFMAMBAf8wCwYDVR0PBAQDAgLkMB0G\nA1UdDgQWBBTTiP/MFw4DDwXqQ/J2LLYPRUkkETAfBgNVHSMEGDAWgBTTiP/MFw4D\nDwXqQ/J2LLYPRUkkETAFBgMrZXADQQBSb0vXhw3pw25qrWoMjqROjawe7/kMlu7p\nMJyb/Ppa2C6PraSVPgJGWKl+/5S5tBr58KFNg+0H94CH4d1VCPwI\n-----END CERTIFICATE-----"
+}
