@@ -3,7 +3,8 @@ import { createRoot } from 'react-dom/client'
 import {ErrorBoundary} from "react-error-boundary";
 
 import './index.css'
-// import '@solana/webcrypto-ed25519-polyfill';
+// import {install as solanaInstall} from '@solana/webcrypto-ed25519-polyfill';
+// solanaInstall();
 
 import App from './App.tsx'
 import Loading from "./Loading.tsx";
