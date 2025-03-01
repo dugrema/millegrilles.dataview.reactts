@@ -15,8 +15,6 @@ function Menu() {
     const location = useLocation();
     const {ready} = useWorkers();
 
-    console.info("useContext in Menu: ready = ", ready);
-
     const cssDisconnected = useMemo(()=>{
         if(!ready) return ' bg-red-500';
         // if(!filehostAuthenticated) return ' bg-amber-700'

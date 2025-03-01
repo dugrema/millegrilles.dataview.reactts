@@ -1,5 +1,5 @@
 import {createContext, useContext} from "react";
-import {WorkersState} from "./workers.ts";
+import {WorkersState} from "./userConnect.ts";
 
 // Note : splitting Context tsx from non JSX (ts) components to allow vite fast-refresh.
 
