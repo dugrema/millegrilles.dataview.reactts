@@ -44,9 +44,8 @@ function Menu() {
             </div>
 
             {/* Middle section of the menu. */}
-            <div className='col-span-4 sm:col-span-2 text-center sm:text-center border-b border-indigo-500'>
+            <div className='col-span-3 sm:col-span-2 text-center sm:text-center border-b border-indigo-500'>
 
-                {/* Regular menu items - need to hide in mobile mode during selection. */}
                 <div className={'inline'}>
                     <div className={'inline-block mx-0.5 px-1 sm:px-2 rounded-t-md transition-colors duration-300' + (selectedSection==='feeds'?selectedClassname:unselectedClassname)}>
                         <Link to='/dataviewer/private'>
@@ -68,7 +67,7 @@ function Menu() {
             </div>
 
             {/* Right portion of the menu: back to portal link. Hide when < md. */}
-            <div className='hidden sm:inline text-right'>
+            <div className='text-right'>
                 <a href="/millegrilles">
                     <img src={LogoutIcon} alt='Go to portal' className='w-7 inline' title='Back to portal' />
                 </a>

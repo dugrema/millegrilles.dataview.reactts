@@ -46,6 +46,8 @@ export function PrivateWorkerContext(props: {children: React.ReactNode}) {
             if(result) {
                 setWorkers(result.result.workers);
                 setUsername(result.username);
+            } else {
+                console.error("initializeOuterWorkers failed to initialize");
             }
         })
             .catch(error => {
