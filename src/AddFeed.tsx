@@ -5,7 +5,8 @@ import ActionButton from "./ActionButton.tsx";
 import {MessageResponse} from "millegrilles.reactdeps.typescript";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 import {AppWorkers} from "./workers/userConnect.ts";
-import {FeedInformation} from "./workers/connection.worker.ts";
+import {FeedInformation, NewFeedPayload} from "./workers/connection.worker.ts";
+import {messageStruct} from "millegrilles.cryptography";
 
 function AddFeedPage() {
 
@@ -19,13 +20,14 @@ function AddFeedPage() {
     const [active, setActive] = useState(true);
     const [pollingRate, setPollingRate] = useState('');
     const [security, setSecurity] = useState("2.prive");
+    const [feedType, setFeedType] = useState("");
 
     const addCallback = useCallback(async () => {
         if(!workers || !ready) throw new Error('Connection not ready');
         const response = await generateAddCommands(workers, {name, url, auth_username: username, auth_password: password},
-            {decrypted, active, pollingRate, security});
+            {feedType, decrypted, active, pollingRate, security});
         if(!response.ok) throw new Error(`Failed to generate add command: ${response.err}`);
-    }, [workers, ready, name, url, username, password, decrypted, active, pollingRate, security]);
+    }, [workers, ready, name, url, username, password, decrypted, active, pollingRate, security, feedType]);
 
     return (
         <div className='fixed top-10 md:top-12 left-0 right-0 px-2 bottom-10 overflow-y-auto'>
@@ -43,7 +45,8 @@ function AddFeedPage() {
                     </div>
 
                     <label>Type</label>
-                    <FeedTypeList className='col-span-3 text-black w-full bg-slate-300 border-2 border-indigo-400' />
+                    <FeedTypeList value={feedType} onChange={e=>setFeedType(e.target.value)}
+                                  className='col-span-3 text-black w-full bg-slate-300 border-2 border-indigo-400' />
 
                     <label htmlFor="url">Url (depends on feed type)</label>
                     <input id="url" type="text" value={url} onChange={e=>setUrl(e.target.value)}
@@ -88,9 +91,9 @@ function AddFeedPage() {
 
 export default AddFeedPage;
 
-function FeedTypeList(props: {className?: string}) {
+function FeedTypeList(props: {id?: string, className?: string, value: string, onChange: React.ChangeEventHandler<HTMLSelectElement>}) {
     return (
-        <select className={props.className}>
+        <select id={props.id} className={props.className} value={props.value} onChange={props.onChange}>
             <option>Pick one</option>
             <option value="web.google_trends.news">Google Trends News</option>
             <option value="millegrilles.senseurs_passifs">Senseurs Passifs</option>
@@ -108,9 +111,49 @@ function SecurityLevelList(props: {id?: string, className?: string, value: strin
 }
 
 async function generateAddCommands(workers: AppWorkers, paramsSecure: FeedInformation,
-                                   params: {decrypted?: boolean, active?: boolean, pollingRate?: string, security?: string}): Promise<MessageResponse> {
+                                   params: {feedType: string, decrypted?: boolean, active?: boolean, pollingRate?: string, security?: string}): Promise<MessageResponse> {
 
-    throw new Error('todo');
-    // let encryptedInformation = workers.
-    // return await workers.connection.createFeed();
+    // Validate data
+    const feedType = params.feedType;
+    if(!feedType) {
+        throw new Error("Feed type must be selected");
+    }
+    let pollingRateInt: number | null = null;
+    if(params.pollingRate) {
+        pollingRateInt = Number.parseInt(params.pollingRate);
+        if(isNaN(pollingRateInt)) throw new Error('Invalid pollingRate');
+    }
+    const security = params.security;
+    if(!security) {
+        throw new Error('Invalid security value');
+    }
+    const active = params.active !== false;
+    const decrypted = params.decrypted !== false;
+
+    // Generate new key and keymaster command
+    const key = await workers.encryption.generateSecretKey(['DataCollector']);
+    const encryptedKey = await workers.encryption.encryptSecretKey(key.secret);
+    const keymasterCommand = await workers.connection.createRoutedMessage(
+        messageStruct.MessageKind.Command,
+        {signature: key.signature,cles: encryptedKey},
+        {domaine: 'MaitreDesCles', action: 'ajouterCleDomaines'},
+    );
+
+    // Encrypt sensitive information
+    const encryptedContent = await workers.encryption.encryptMessageMgs4ToBase64(paramsSecure, key.secret);
+    encryptedContent.cle_id = key.cle_id;
+    console.debug("New Key: %O\nEncrypted key command: %O\nEncrypted content: %O", key, keymasterCommand, encryptedContent);
+    delete encryptedContent.digest;  // Not useful in this context
+
+    // Send feed create commmand
+    const addFeedContent: NewFeedPayload = {
+        feed_type: feedType,
+        security_level: security,
+        domain: 'DataCollector',  // TODO - make dynamic
+        encrypted_feed_information: encryptedContent,
+        poll_rate: pollingRateInt,
+        active,
+        decrypt_in_database: decrypted,
+    };
+    return await workers.connection.createFeed(addFeedContent, keymasterCommand);
 }

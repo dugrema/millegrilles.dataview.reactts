@@ -2,11 +2,13 @@ import {proxy, Remote, wrap} from "comlink";
 import {certificates} from "millegrilles.cryptography";
 import {CommonTypes, ConnectionCallbackParameters, userStoreIdb} from "millegrilles.reactdeps.typescript";
 import {AppsConnectionWorker} from "./connection.worker";
+import {AppsEncryptionWorker} from "./encryption.ts";
 
 const SOCKETIO_PATH = '/millegrilles/socket.io';
 
 export type AppWorkers = {
-    connection: Remote<AppsConnectionWorker>
+    connection: Remote<AppsConnectionWorker>,
+    encryption: Remote<AppsEncryptionWorker>,
 };
 
 export type WorkersState = {
@@ -57,9 +59,10 @@ export async function initializeWorkers(setConnectionCallbackParams: (params: Co
     const fiche = await loadFiche();
 
     console.debug("Fiche loaded %O, init workers", fiche);
-    // const connection = new ComlinkWorker(new URL('./connection.worker.ts', import.meta.url)) as Remote<AppsConnectionWorker>;
     const connectionWorker = new Worker(new URL('./connection.worker.ts', import.meta.url), { type: "module" });
     const connection = wrap(connectionWorker) as Remote<AppsConnectionWorker>;
+    const encryptionWorker = new Worker(new URL('./encryption.worker.ts', import.meta.url), { type: "module" });
+    const encryption = wrap(encryptionWorker) as Remote<AppsEncryptionWorker>;
 
     // Set-up the workers
     const serverUrl = new URL(window.location.href);
@@ -70,6 +73,10 @@ export async function initializeWorkers(setConnectionCallbackParams: (params: Co
     const response = await connection.initialize(serverUrl.href, fiche.ca, setConnectionProxy, {reconnectionDelay: 7500});
     console.debug("Connection initialized:", response);
 
+    // Initialize other workers
+    await encryption.initialize(fiche.ca);
+    await encryption.setEncryptionKeys(fiche.chiffrage);
+
     if(response) {
         console.debug("Connection initialized %s, connecting", response);
         await connection.connect();
@@ -77,7 +84,7 @@ export async function initializeWorkers(setConnectionCallbackParams: (params: Co
         throw new Error("Error initializing workers");
     }
 
-    const workers = {connection};
+    const workers = {connection, encryption};
 
     return {fiche, workers};
 }

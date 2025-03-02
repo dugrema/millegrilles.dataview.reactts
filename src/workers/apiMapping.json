@@ -7,6 +7,6 @@
     {"domain": "CoreTopologie", "action": "getFilehosts", "exchange": "1.public"}
   ],
   "commands": [
-    {"domain": "SenseursPassifs", "action": "challengeAppareil"}
+    {"domain": "DataCollector", "action": "createFeed"}
   ]
 }
