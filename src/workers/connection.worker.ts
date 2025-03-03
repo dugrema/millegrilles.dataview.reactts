@@ -43,12 +43,17 @@ export class AppsConnectionWorker extends ConnectionWorker {
 
     async authenticate(reconnect?: boolean): Promise<boolean> {
         if(!this.connection) throw new Error("Connection is not initialized");
-        return this.connection.authenticate(apiMapping, reconnect);
+        return await this.connection.authenticate(apiMapping, reconnect);
     }
 
     async createFeed(feed: NewFeedPayload, keyCommand: messageStruct.MilleGrillesMessage): Promise<MessageResponse> {
         if(!this.connection) throw new Error("Connection is not initialized");
-        return this.connection.sendCommand(feed, DOMAIN_DATA_COLLECTOR_NAME, 'createFeed', {attachments: {key: keyCommand}});
+        return await this.connection.sendCommand(feed, DOMAIN_DATA_COLLECTOR_NAME, 'createFeed', {attachments: {key: keyCommand}});
+    }
+
+    async deleteFeed(feedId: string): Promise<MessageResponse> {
+        if(!this.connection) throw new Error("Connection is not initialized");
+        return await this.connection.sendCommand({feed_id: feedId}, DOMAIN_DATA_COLLECTOR_NAME, 'deleteFeed');
     }
 
     async getFeeds(): Promise<GetFeedsResponseType> {

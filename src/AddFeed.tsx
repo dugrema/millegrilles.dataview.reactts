@@ -1,4 +1,4 @@
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {useCallback, useState} from "react";
 import SwitchButton from "./SwitchButton.tsx";
 import ActionButton from "./ActionButton.tsx";
@@ -11,6 +11,7 @@ import {messageStruct} from "millegrilles.cryptography";
 function AddFeedPage() {
 
     const {workers, ready} = useWorkers();
+    const navigate = useNavigate();
 
     const [name, setName] = useState("");
     const [url, setUrl] = useState("");
@@ -27,7 +28,9 @@ function AddFeedPage() {
         const response = await generateAddCommands(workers, {name, url, auth_username: username, auth_password: password},
             {feedType, decrypted, active, pollingRate, security});
         if(!response.ok) throw new Error(`Failed to generate add command: ${response.err}`);
-    }, [workers, ready, name, url, username, password, decrypted, active, pollingRate, security, feedType]);
+        // Go back to feeds
+        navigate('/dataviewer/private');
+    }, [workers, ready, name, url, username, password, decrypted, active, pollingRate, security, feedType, navigate]);
 
     return (
         <div className='fixed top-10 md:top-12 left-0 right-0 px-2 bottom-10 overflow-y-auto'>

@@ -8,7 +8,7 @@ function DataViewerPrivate() {
     return (
         <PrivateWorkerContext>
             <Menu />
-            <main id="main" className="pt-4 pb-2 pl-2 pr-6 w-full">
+            <main id="main" className="pt-4 pb-2 w-full">
                 <Outlet />
             </main>
             <Footer/>
