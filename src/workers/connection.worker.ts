@@ -24,12 +24,19 @@ export type FeedType = NewFeedPayload & {
     feed_id: string,
 };
 
+export type EncryptedKeyType = {[keyId: string]: Uint8Array};
+
 /** Feed decrypted metadata. */
 export type FeedInformation = {
     name: string,
     url?: string | null,
     auth_username?: string | null,
     auth_password?: string | null,
+};
+
+export type GetFeedsResponseType = MessageResponse & {
+    feeds: FeedType[];
+    keys: messageStruct.MilleGrillesMessage,
 };
 
 export class AppsConnectionWorker extends ConnectionWorker {
@@ -44,9 +51,9 @@ export class AppsConnectionWorker extends ConnectionWorker {
         return this.connection.sendCommand(feed, DOMAIN_DATA_COLLECTOR_NAME, 'createFeed', {attachments: {key: keyCommand}});
     }
 
-    async getFeeds(params: {userId?: string | null}): Promise<MessageResponse> {
+    async getFeeds(): Promise<GetFeedsResponseType> {
         if(!this.connection) throw new Error("Connection is not initialized");
-        return this.connection.sendRequest(params, DOMAIN_DATA_COLLECTOR_NAME, 'getFeeds');
+        return await this.connection.sendRequest({}, DOMAIN_DATA_COLLECTOR_NAME, 'getFeeds') as Promise<GetFeedsResponseType>;
     }
 
 }

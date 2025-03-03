@@ -4,7 +4,8 @@
     "exchange": "2.prive"
   },
   "requests": [
-    {"domain": "CoreTopologie", "action": "getFilehosts", "exchange": "1.public"}
+    {"domain": "CoreTopologie", "action": "getFilehosts", "exchange": "1.public"},
+    {"domain": "DataCollector", "action": "getFeeds", "exchange": "2.prive"}
   ],
   "commands": [
     {"domain": "DataCollector", "action": "createFeed"}

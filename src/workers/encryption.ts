@@ -65,8 +65,6 @@ export class AppsEncryptionWorker {
         return { keyInfo, secret: keyInfo.secret, signature: keySignature, cle_id: keyId };
     }
 
-
-
     /**
      *
      * @param pems Arrays of pems, each pem being a certificat chain for a MaitreDesCles certificate.
