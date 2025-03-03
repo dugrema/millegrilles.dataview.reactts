@@ -10,15 +10,22 @@ import apiMapping from './apiMapping.json';
 
 const DOMAIN_DATA_COLLECTOR_NAME = 'DataCollector';
 
-export type NewFeedPayload = {
-    feed_type: string,
+type FeedPayload = {
     security_level: string,
-    domain: string,
     encrypted_feed_information: encryption.EncryptedData,
     poll_rate?: number | null,
     active?: boolean | null,
     decrypt_in_database?: boolean | null,
 }
+
+export type NewFeedPayload = FeedPayload & {
+    feed_type: string,
+    domain: string,
+}
+
+export type UpdateFeedPayload = FeedPayload & {
+    feed_id: string,
+};
 
 export type FeedType = NewFeedPayload & {
     feed_id: string,
@@ -51,14 +58,19 @@ export class AppsConnectionWorker extends ConnectionWorker {
         return await this.connection.sendCommand(feed, DOMAIN_DATA_COLLECTOR_NAME, 'createFeed', {attachments: {key: keyCommand}});
     }
 
+    async updateFeed(feed: UpdateFeedPayload): Promise<MessageResponse> {
+        if(!this.connection) throw new Error("Connection is not initialized");
+        return await this.connection.sendCommand(feed, DOMAIN_DATA_COLLECTOR_NAME, 'updateFeed');
+    }
+
     async deleteFeed(feedId: string): Promise<MessageResponse> {
         if(!this.connection) throw new Error("Connection is not initialized");
         return await this.connection.sendCommand({feed_id: feedId}, DOMAIN_DATA_COLLECTOR_NAME, 'deleteFeed');
     }
 
-    async getFeeds(): Promise<GetFeedsResponseType> {
+    async getFeeds(feedIds?: string[] | null): Promise<GetFeedsResponseType> {
         if(!this.connection) throw new Error("Connection is not initialized");
-        return await this.connection.sendRequest({}, DOMAIN_DATA_COLLECTOR_NAME, 'getFeeds') as Promise<GetFeedsResponseType>;
+        return await this.connection.sendRequest({feed_ids: feedIds}, DOMAIN_DATA_COLLECTOR_NAME, 'getFeeds') as Promise<GetFeedsResponseType>;
     }
 
 }
