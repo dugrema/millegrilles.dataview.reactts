@@ -95,11 +95,14 @@ async function generateAddCommands(workers: AppWorkers, paramsSecure: FeedInform
     const encryptedKey = await workers.encryption.encryptSecretKey(key.secret);
     const keymasterCommand = await workers.connection.createRoutedMessage(
         messageStruct.MessageKind.Command,
-        {signature: key.signature,cles: encryptedKey},
+        {signature: key.signature, cles: encryptedKey},
         {domaine: 'MaitreDesCles', action: 'ajouterCleDomaines'},
     );
 
     // Encrypt sensitive information
+    if(!paramsSecure.url) paramsSecure.url = null;
+    if(!paramsSecure.auth_username) paramsSecure.auth_username = null;
+    if(!paramsSecure.auth_password) paramsSecure.auth_password = null;
     const encryptedContent = await workers.encryption.encryptMessageMgs4ToBase64(paramsSecure, key.secret);
     encryptedContent.cle_id = key.cle_id;
     console.debug("New Key: %O\nEncrypted key command: %O\nEncrypted content: %O", key, keymasterCommand, encryptedContent);
