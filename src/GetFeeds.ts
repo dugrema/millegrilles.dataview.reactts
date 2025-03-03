@@ -71,6 +71,11 @@ async function fetchFeeds(workers: AppWorkers | null | undefined, ready: boolean
         if (!response.ok) throw new Error(`Error loading feeds: ${response.err}`);
         console.debug("Get feeds response", response);
 
+        if(response.feeds.length === 0) {
+            // No feeds, return
+            return {feeds: [], keys: {}};
+        }
+
         const encryptedKeyMessage = response.keys;
         const decryptedKeyMessage: DecryptedKeyMessage = await workers.connection.decryptMessage(encryptedKeyMessage) as DecryptedKeyMessage;
         console.debug("Decryptd keys", decryptedKeyMessage);
