@@ -71,9 +71,9 @@ export function PrivateWorkerContext(props: {children: React.ReactNode}) {
             // Authenticate
             // console.debug("Authenticating");
             authenticateConnectionWorker(workers, username, true, false)
-                .then(result=>{
-                    console.debug("Authenticated ", result);
-                })
+                // .then(result=>{
+                //     console.debug("Authenticated ", result);
+                // })
                 .catch(err=>console.error("Authentication error: ", err));
         }
     }, [workers, username, connectionCallbackParams, authenticating, setAuthenticating]);
@@ -91,7 +91,7 @@ export function PrivateWorkerContext(props: {children: React.ReactNode}) {
 
     // Trigger a reauthentication for a newly selected filehostId
     useEffect(()=>{
-        console.debug("Changing filehost id to", filehostId);
+        // console.debug("Changing filehost id to", filehostId);
         setFilehostAuthenticated(false);
     }, [filehostId, setFilehostAuthenticated]);
 

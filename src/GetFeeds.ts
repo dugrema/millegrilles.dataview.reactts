@@ -69,7 +69,7 @@ async function fetchFeeds(workers: AppWorkers | null | undefined, ready: boolean
 
         const response = await workers.connection.getFeeds(feedIds);
         if (!response.ok) throw new Error(`Error loading feeds: ${response.err}`);
-        console.debug("Get feeds response", response);
+        // console.debug("Get feeds response", response);
 
         if(response.feeds.length === 0) {
             // No feeds, return
@@ -78,7 +78,7 @@ async function fetchFeeds(workers: AppWorkers | null | undefined, ready: boolean
 
         const encryptedKeyMessage = response.keys;
         const decryptedKeyMessage: DecryptedKeyMessage = await workers.connection.decryptMessage(encryptedKeyMessage) as DecryptedKeyMessage;
-        console.debug("Decryptd keys", decryptedKeyMessage);
+        // console.debug("Decrypted keys", decryptedKeyMessage);
         const decryptedKeys = decryptedKeyMessage.cles;
         if(!decryptedKeys) {
             console.error(`No decrypted key information ${decryptedKeyMessage.err}`);
@@ -91,7 +91,7 @@ async function fetchFeeds(workers: AppWorkers | null | undefined, ready: boolean
             return acc;
         }, {} as {[key: string]: Uint8Array});
 
-        console.debug("Decrypted key map", decryptedKeyMap);
+        // console.debug("Decrypted key map", decryptedKeyMap);
 
         const mappedFeeds = [] as DecryptedFeedType[];
         for await (const feed of response.feeds) {
@@ -112,7 +112,7 @@ async function fetchFeeds(workers: AppWorkers | null | undefined, ready: boolean
             }
             const cleartextBytes = await workers.encryption.decryptMessage(format, key, nonce, ciphertext_base64);
             const cleartext = JSON.parse(new TextDecoder().decode(cleartextBytes));
-            console.debug("Cleartext", cleartext);
+            // console.debug("Cleartext", cleartext);
             mappedFeeds.push({feed, info: cleartext, secretKey: key});
         }
 

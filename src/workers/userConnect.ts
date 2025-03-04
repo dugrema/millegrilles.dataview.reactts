@@ -34,20 +34,21 @@ export async function initializeOuterWorkers(cb: (params: ConnectionCallbackPara
     const result = await initializeWorkers(cbProxy);
     // workersOuter = result.workers;
 
-    console.debug("Connecting...");
-    const response = await result.workers.connection.connect();
-    console.info("Connection response", response);
+    // console.debug("Connecting...");
+    await result.workers.connection.connect();
+    // const response = await result.workers.connection.connect();
+    // console.info("Connection response", _response);
 
     return {username, result};
 }
 
 export async function verifyAuthentication() {
     const response = await fetch('/auth/verifier_usager');
-    console.debug("Response authentication", response);
+    // console.debug("Response authentication", response);
     const userStatus = response.status;
     const username = response.headers.get('x-user-name');
     if(userStatus === 200 && username) {
-        console.debug("User %s is propertly authenticated", username);
+        // console.debug("User %s is propertly authenticated", username);
         return username;
     } else {
         console.warn("User is not propertly authenticated");
@@ -58,7 +59,7 @@ export async function verifyAuthentication() {
 export async function initializeWorkers(setConnectionCallbackParams: (params: ConnectionCallbackParameters)=>void): Promise<InitWorkersResult> {
     const fiche = await loadFiche();
 
-    console.debug("Fiche loaded %O, init workers", fiche);
+    // console.debug("Fiche loaded %O, init workers", fiche);
     const connectionWorker = new Worker(new URL('./connection.worker.ts', import.meta.url), { type: "module" });
     const connection = wrap(connectionWorker) as Remote<AppsConnectionWorker>;
     const encryptionWorker = new Worker(new URL('./encryption.worker.ts', import.meta.url), { type: "module" });
@@ -67,18 +68,18 @@ export async function initializeWorkers(setConnectionCallbackParams: (params: Co
     // Set-up the workers
     const serverUrl = new URL(window.location.href);
     serverUrl.pathname = SOCKETIO_PATH;
-    console.info("Connect to server url ", serverUrl);
+    console.info("Connect to server url ", serverUrl.href);
 
     const setConnectionProxy = proxy(setConnectionCallbackParams);
     const response = await connection.initialize(serverUrl.href, fiche.ca, setConnectionProxy, {reconnectionDelay: 7500});
-    console.debug("Connection initialized:", response);
+    // console.debug("Connection initialized:", response);
 
     // Initialize other workers
     await encryption.initialize(fiche.ca);
     await encryption.setEncryptionKeys(fiche.chiffrage);
 
     if(response) {
-        console.debug("Connection initialized %s, connecting", response);
+        // console.debug("Connection initialized %s, connecting", response);
         await connection.connect();
     } else {
         throw new Error("Error initializing workers");
