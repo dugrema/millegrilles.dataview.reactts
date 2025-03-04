@@ -1,14 +1,14 @@
 {
   "pubkey": "90423740b9bb822fd5b673252fc79c82c77fb8fbd4162efbaebafeaefcef4015",
-  "estampille": 1740835909,
+  "estampille": 1741053020,
   "kind": 2,
-  "contenu": "{\"commands\":[{\"action\":\"challengeAppareil\",\"domain\":\"SenseursPassifs\"}],\"defaults\":{\"domain\":\"DataCollector\",\"exchange\":\"2.prive\"},\"requests\":[{\"action\":\"getFilehosts\",\"domain\":\"CoreTopologie\",\"exchange\":\"1.public\"}]}",
+  "contenu": "{\"commands\":[{\"action\":\"createFeed\",\"domain\":\"DataCollector\"},{\"action\":\"updateFeed\",\"domain\":\"DataCollector\"},{\"action\":\"deleteFeed\",\"domain\":\"DataCollector\"}],\"defaults\":{\"domain\":\"DataCollector\",\"exchange\":\"2.prive\"},\"requests\":[{\"action\":\"getFilehosts\",\"domain\":\"CoreTopologie\",\"exchange\":\"1.public\"},{\"action\":\"getFeeds\",\"domain\":\"DataCollector\"},{\"action\":\"getDataItemsMostRecent\",\"domain\":\"DataCollector\"}]}",
   "routage": {
     "action": "configuration",
     "domaine": "webapi"
   },
-  "id": "e168295b04bcf0a81b9e1713ae0bc01b8b69df87638658a9bf74bd394d1560ff",
-  "sig": "b66e098a65c63639ec83db0d469cc79b2e1ffe9e2258a9693918abae174dc36eae1531d97d09ed3f2c0a1fd669aebf569ea351beeeefc55796b9dd2c044c7400",
+  "id": "57cb56456f59f24dcf0cd52a1e55fa5e45edaf018ae8760ed277b468106ce7a1",
+  "sig": "3c3c279afb519eec03fde9f15bab095e560e04bab99c1465d9fa5eba6dc96119c3088f88df3f1ee7ac12c107660c185b64b3ede45b0d2eff7a88dc60db41690d",
   "certificat": [
     "-----BEGIN CERTIFICATE-----\nMIIBqjCCAVygAwIBAgIUSiBPpLsf0XPSPMI2hYbxRYny+xYwBQYDK2VwMBYxFDAS\nBgNVBAMTC01pbGxlR3JpbGxlMB4XDTI1MDIwNTE0NDE1NFoXDTI1MDMwODE0NDIx\nNFowazESMBAGA1UEAwwJU2lnbmF0dXJlMRIwEAYDVQQLDAlzaWduYXR1cmUxQTA/\nBgNVBAoMOHplWW5jUnFFcVo2ZVRFbVVaOHdoSkZ1SEc3OTZlU3ZDVFdFNE00MzJp\nelhycDIyYkF0d0dtN0pmMCowBQYDK2VwAyEAkEI3QLm7gi/VtnMlL8ecgsd/uPvU\nFi77rrr+rvzvQBWjZzBlMCMGBCoDBAEEG3NpZ25hdHVyZSxjYXRhbG9ndWVzLHdl\nYmFwaTAfBgNVHSMEGDAWgBTTiP/MFw4DDwXqQ/J2LLYPRUkkETAdBgNVHQ4EFgQU\nP+/IWfVvYG1KML09seEu7b3rHlwwBQYDK2VwA0EAscc8b+L2w97WDmKaLPvlsfAh\narX3v070N6KeeNs2CtdXkDNxl0MpI2w4DbJLSRST0iCiXgvVOaE4Fq5dDsXTAA==\n-----END CERTIFICATE-----"
   ],
