@@ -46,6 +46,18 @@ export type GetFeedsResponseType = MessageResponse & {
     keys: messageStruct.MilleGrillesMessage,
 };
 
+export type DataItemType = {
+    data_id: string,
+    feed_id: string,
+    pub_date: number,
+    encrypted_data: encryption.EncryptedData,
+};
+
+export type GetDataItemsResponseType = MessageResponse & {
+    items: DataItemType[];
+    keys: messageStruct.MilleGrillesMessage,
+};
+
 export class AppsConnectionWorker extends ConnectionWorker {
 
     async authenticate(reconnect?: boolean): Promise<boolean> {
@@ -71,6 +83,11 @@ export class AppsConnectionWorker extends ConnectionWorker {
     async getFeeds(feedIds?: string[] | null): Promise<GetFeedsResponseType> {
         if(!this.connection) throw new Error("Connection is not initialized");
         return await this.connection.sendRequest({feed_ids: feedIds}, DOMAIN_DATA_COLLECTOR_NAME, 'getFeeds') as Promise<GetFeedsResponseType>;
+    }
+
+    async getDataItems(feedId: string) {
+        if(!this.connection) throw new Error("Connection is not initialized");
+        return await this.connection.sendRequest({feed_id: feedId}, DOMAIN_DATA_COLLECTOR_NAME, 'getDataItemsMostRecent') as Promise<GetDataItemsResponseType>;
     }
 
 }

@@ -74,8 +74,8 @@ function UpdateFeedPage() {
         await mutate({...data, feeds: updatedFeeds});
 
         // Go back to feeds
-        navigate('/dataviewer/private');
-    }, [workers, ready, data, feed, name, url, username, password, decrypted, active, pollingRate, security, navigate]);
+        navigate(`/dataviewer/private/feed/${feedId}`);
+    }, [workers, ready, data, feed, name, url, username, password, decrypted, active, pollingRate, security, navigate, mutate, feedId]);
 
     return (
         <div className='fixed top-10 md:top-12 left-0 right-0 px-2 bottom-10 overflow-y-auto'>
@@ -99,7 +99,7 @@ function UpdateFeedPage() {
                     <ActionButton onClick={addCallback} mainButton={true} disabled={!ready}>
                         Save
                     </ActionButton>
-                    <Link to="/dataviewer/private"
+                    <Link to={`/dataviewer/private/feed/${feedId}`}
                           className="btn inline-block text-center text-indigo-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
                         Cancel
                     </Link>
