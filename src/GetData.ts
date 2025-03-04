@@ -4,13 +4,23 @@ import useSWR, {KeyedMutator} from "swr";
 
 import {multiencoding} from "millegrilles.cryptography";
 
-import {DataItemType, EncryptedKeyType} from "./workers/connection.worker";
+import {DataItemType, EncryptedKeyType, FeedType} from "./workers/connection.worker";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 import {AppWorkers} from "./workers/userConnect.ts";
 
-export type DecryptedDataItemType = DataItemType & {decrypted_data: object};
+export type AttachedFile = {
+    fuuid: string,
+    decryption: {
+        cle_id: string,
+        format: string,
+        nonce: string,
+    }
+}
+
+export type DecryptedDataItemType = DataItemType & {decrypted_data: object, files?: AttachedFile[]};
 
 export type DataItemsListType = {
+    feed: FeedType | null,
     items: DecryptedDataItemType[],
     keys: EncryptedKeyType,
 };
@@ -61,13 +71,18 @@ async function fetchData(workers: AppWorkers | null | undefined, ready: boolean,
     if(!workers || !ready || !feedId) return null;
 
     try {
+        const feedResponse = await workers.connection.getFeeds([feedId]);
+        if(!feedResponse.ok) throw new Error('Invalid feed id: ' + feedId);
+        if(feedResponse.feeds.length === 0) throw new Error("Feed not found: " + feedId);
+        const feed = feedResponse.feeds[0];
+
         const response = await workers.connection.getDataItems(feedId);
         if (!response.ok) throw new Error(`Error loading feeds: ${response.err}`);
         console.debug("Get feeds response", response);
 
         if(response.items.length === 0) {
             // No feeds, return
-            return {items: [], keys: {}};
+            return {feed: null, items: [], keys: {}};
         }
 
         const encryptedKeyMessage = response.keys;
@@ -85,7 +100,7 @@ async function fetchData(workers: AppWorkers | null | undefined, ready: boolean,
             return acc;
         }, {} as {[key: string]: Uint8Array});
 
-        console.debug("Decrypted key map", decryptedKeyMap);
+        // console.debug("Decrypted key map", decryptedKeyMap);
 
         const mappedDataItems = [] as DecryptedDataItemType[];
         for await (const dataItem of response.items) {
@@ -106,19 +121,19 @@ async function fetchData(workers: AppWorkers | null | undefined, ready: boolean,
             }
             let cleartextBytes = await workers.encryption.decryptMessage(format, key, nonce, ciphertext_base64);
             if(compression === 'deflate') {
-                console.debug("Decompressing with deflate");
+                // console.debug("Decompressing with deflate");
                 cleartextBytes = pako.inflate(cleartextBytes);
             } else if(compression) {
                 throw new Error("unsupported compression type " + compression);
             }
             const clearTextStr = new TextDecoder().decode(cleartextBytes);
-            console.debug("Cleartext string", clearTextStr);
+            // console.debug("Cleartext string", clearTextStr);
             const cleartext = JSON.parse(clearTextStr);
-            console.debug("Cleartext", cleartext);
+            // console.debug("Cleartext", cleartext);
             mappedDataItems.push({...dataItem, decrypted_data: cleartext});
         }
 
-        return {items: mappedDataItems, keys: decryptedKeyMap};
+        return {feed, items: mappedDataItems, keys: decryptedKeyMap};
     } catch(error) {
         console.error("Error loading feeds", error);
         throw error;

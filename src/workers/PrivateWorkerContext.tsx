@@ -14,7 +14,7 @@ export function PrivateWorkerContext(props: {children: React.ReactNode}) {
     const [userId, setUserId] = useState("");
 
     const ready = useMemo(()=>{
-        console.debug("connectionCallbackParams", connectionCallbackParams);
+        // console.debug("connectionCallbackParams", connectionCallbackParams);
         if(!connectionCallbackParams) return false;
         return connectionCallbackParams?.connected && connectionCallbackParams?.authenticated;
     }, [connectionCallbackParams]);
@@ -64,7 +64,7 @@ export function PrivateWorkerContext(props: {children: React.ReactNode}) {
             setTimeout(()=>setAuthenticating(false), 5_000);  // retry every 5 seconds
 
             // Authenticate
-            console.debug("Authenticating");
+            // console.debug("Authenticating");
             authenticateConnectionWorker(workers, username, true, false)
                 .then(result=>{
                     console.debug("Authenticated ", result);
@@ -73,7 +73,7 @@ export function PrivateWorkerContext(props: {children: React.ReactNode}) {
         }
     }, [workers, username, connectionCallbackParams, authenticating, setAuthenticating]);
 
-    console.debug("Worker state: ", workerState);
+    // console.debug("Worker state: ", workerState);
 
     return (
         <PrivateWorkerContextData value={workerState}>

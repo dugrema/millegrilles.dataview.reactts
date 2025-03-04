@@ -1,6 +1,14 @@
 // import '@solana/webcrypto-ed25519-polyfill';
-
-import { encryption, encryptionMgs4, multiencoding, keymaster, x25519, certificates } from 'millegrilles.cryptography';
+import axios from 'axios';
+import {
+    encryption,
+    encryptionMgs4,
+    multiencoding,
+    keymaster,
+    x25519,
+    certificates,
+    messageStruct
+} from 'millegrilles.cryptography';
 import { gzip, inflate } from 'pako';
 
 export type EncryptionResult = {
@@ -29,17 +37,37 @@ export type EncryptionOptions = {
     base64?: boolean,
 }
 
-export type GeneratedSecretKeyResult = { keyInfo: any, secret: Uint8Array, signature: keymaster.DomainSignature, cle_id: string };
+export type GeneratedSecretKeyResult = { keyInfo: unknown, secret: Uint8Array, signature: keymaster.DomainSignature, cle_id: string };
+
+export type Filehost = {
+    filehost_id: string,
+    instance_id?: string | null,
+    tls_external?: string | null,
+    url_external?: string | null,
+    url_internal?: string | null,
+}
+
+export type FilehostDirType = Filehost & {
+    url?: string | null,
+    jwt?: string | null,
+    authenticated?: boolean | null,
+    lastPing?: number | null,
+};
 
 export class AppsEncryptionWorker {
     millegrillePublicKey: Uint8Array | null;
     caCertificate: certificates.CertificateWrapper | null;
     encryptionKeys: Array<certificates.CertificateWrapper>;
+    filehosts: FilehostDirType[] | null;
+    selectedFilehost: FilehostDirType | null;
 
     constructor() {
         this.millegrillePublicKey = null;
         this.caCertificate = null;
         this.encryptionKeys = [];
+
+        this.filehosts = null;
+        this.selectedFilehost = null;
     }
 
     async initialize(caPem: string) {
@@ -76,7 +104,7 @@ export class AppsEncryptionWorker {
                 await wrapper.verify(this.caCertificate?.certificate);
                 validWrappers.push(wrapper);
             } catch(err) {
-                console.warn("invalid MaitreDesCles certificate, rejected");
+                console.warn("invalid MaitreDesCles certificate, rejected", err);
             }
         }
         this.encryptionKeys = validWrappers;
@@ -221,6 +249,56 @@ export class AppsEncryptionWorker {
         }
 
         return completeBuffer;
+    }
+
+    /**
+     *
+     * @param fuuid File unique identifier
+     * @param secretKey Secret key used to decrypt the file
+     * @param decryptionInformation Decryption information (nonce, format, etc.)
+     */
+    async openFile(fuuid: string, secretKey: Uint8Array, decryptionInformation: messageStruct.MessageDecryption): Promise<Blob> {
+        const filehost = this.selectedFilehost;
+        if(!filehost) throw new Error('No filehost is available');
+        if(!filehost.authenticated) throw new Error('Connection to filehost not authenticated');
+        const url = filehost.url;
+        if(!url) throw new Error('No URL is available for the selected filehost');
+        if(decryptionInformation.format !== 'mgs4') throw new Error('Unsupported encryption format: ' + decryptionInformation.format);
+        if(!decryptionInformation.nonce) throw new Error('Nonce missing');
+
+        const fileUrl = new URL(url + '/files/' + fuuid);
+        const response = await axios({method: 'GET', url: fileUrl.href, responseType: 'blob', withCredentials: true});
+
+        const encryptedBlob = response.data as Blob;
+
+        // Decrypt file
+        const nonce = multiencoding.decodeBase64(decryptionInformation.nonce);
+        const decipher = await encryptionMgs4.getMgs4Decipher(secretKey, nonce);
+
+        const readableStream = encryptedBlob.stream() as ReadableStream;
+        const reader = readableStream.getReader();
+        const blobs = [] as Blob[];  // Save all chunks in blobs, they will get concatenated at finalize.
+        while(true) {
+            const {done, value} = await reader.read();
+            if(done) break;
+            if(value && value.length > 0) {
+                const output = await decipher.update(value);
+                if(output && output.length > 0) {
+                    const blob = new Blob([output]);
+                    blobs.push(blob);
+                }
+            }
+        }
+
+        const finalOutput = await decipher.finalize();
+        let outputBlob = null as Blob | null;
+        if(finalOutput && finalOutput.length > 0) {
+            outputBlob = new Blob([...blobs, finalOutput]);
+        } else {
+            outputBlob = new Blob(blobs);
+        }
+
+        return outputBlob;
     }
 
 }

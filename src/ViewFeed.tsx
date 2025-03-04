@@ -1,8 +1,8 @@
 import {Link, useParams} from "react-router-dom";
-import {DataItemsListType, useGetData} from "./GetData.ts";
+import {AttachedFile, DataItemsListType, useGetData} from "./GetData.ts";
 import {useEffect, useMemo} from "react";
 import {Formatters} from "millegrilles.reactdeps.typescript";
-import {multiencoding} from "millegrilles.cryptography";
+import ThumbnailFuuid from "./ThumbnailFuuid.tsx";
 
 function ViewFeed() {
 
@@ -15,8 +15,20 @@ function ViewFeed() {
             console.error(error);
             return;
         }
-        console.debug("Feed data", data);
+        // console.debug("Feed data", data);
     }, [data, error]);
+
+    const ViewFeedElem = useMemo(()=> {
+        if(!data || !data.feed) return ViewFeedUnknown;
+
+        const feedType = data.feed.feed_type;
+        console.debug("Feed type ", feedType)
+
+        if(feedType === 'web.google_trends.news') return ViewFeedGoogleTrendsNews;
+
+        // Unsupported feed type
+        return ViewFeedUnknown;
+    }, [data]) as React.ElementType;
 
     return (
         <>
@@ -34,10 +46,14 @@ function ViewFeed() {
             </section>
 
             <section className="w-full fixed top-32 bottom-10 px-2 overflow-y-auto">
-                <ViewFeedGoogleTrendsNews value={data} />
+                <ViewFeedElem value={data} />
             </section>
         </>
     )
+}
+
+function ViewFeedUnknown() {
+    return <div>Unknown feed type</div>;
 }
 
 export default ViewFeed;
@@ -57,20 +73,25 @@ function ViewFeedGoogleTrendsNews(props: {value: DataItemsListType}) {
             return [[], null];
         }
         const elems = [];
-        const thumbnails = [];
+        const thumbnails: React.ReactNode[] = [];
 
         for(const elem of value.items) {
             const gelem = elem.decrypted_data as GoogleTrendsItem;
-            let thumbnail: string | null = null;
-            if(gelem.thumbnail) {
-                const thumbnailBlob = new Blob([multiencoding.decodeBase64Nopad(gelem.thumbnail)]);
-                thumbnail = URL.createObjectURL(thumbnailBlob);
-                thumbnails.push(thumbnail);  // Keep for cleanup
+            let thumbnail: AttachedFile | null = null;
+            // if(gelem.thumbnail) {
+            //     const thumbnailBlob = new Blob([multiencoding.decodeBase64Nopad(gelem.thumbnail)]);
+            //     thumbnail = URL.createObjectURL(thumbnailBlob);
+            //     thumbnails.push(thumbnail);  // Keep for cleanup
+            // }
+            if(elem.files && elem.files.length > 0) {
+                // First item is the thumbnail file
+                thumbnail = elem.files[0];
             }
+
             elems.push(
-                <div className="grid grid-cols-6 space-x-4">
+                <div key={elem.data_id} className="grid grid-cols-6 space-x-4">
                     {thumbnail?
-                        <img className="object-cover pr-2" src={thumbnail} alt="Thumbnail" />
+                        <ThumbnailFuuid value={thumbnail} />
                     :
                         <div></div>
                     }
