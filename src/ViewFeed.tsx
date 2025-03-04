@@ -22,7 +22,7 @@ function ViewFeed() {
         if(!data || !data.feed) return ViewFeedUnknown;
 
         const feedType = data.feed.feed_type;
-        console.debug("Feed type ", feedType)
+        // console.debug("Feed type ", feedType)
 
         if(feedType === 'web.google_trends.news') return ViewFeedGoogleTrendsNews;
 
@@ -68,21 +68,15 @@ type GoogleTrendsItem = {
 function ViewFeedGoogleTrendsNews(props: {value: DataItemsListType}) {
     const {value} = props
 
-    const [dataElems, thumbnails] = useMemo(()=>{
+    const dataElems = useMemo(()=>{
         if(!value || value.items.length === 0) {
             return [[], null];
         }
-        const elems = [];
-        const thumbnails: React.ReactNode[] = [];
 
+        const elems: React.ReactNode[] = [];
         for(const elem of value.items) {
             const gelem = elem.decrypted_data as GoogleTrendsItem;
             let thumbnail: AttachedFile | null = null;
-            // if(gelem.thumbnail) {
-            //     const thumbnailBlob = new Blob([multiencoding.decodeBase64Nopad(gelem.thumbnail)]);
-            //     thumbnail = URL.createObjectURL(thumbnailBlob);
-            //     thumbnails.push(thumbnail);  // Keep for cleanup
-            // }
             if(elem.files && elem.files.length > 0) {
                 // First item is the thumbnail file
                 thumbnail = elem.files[0];
@@ -91,7 +85,7 @@ function ViewFeedGoogleTrendsNews(props: {value: DataItemsListType}) {
             elems.push(
                 <div key={elem.data_id} className="grid grid-cols-6 space-x-4">
                     {thumbnail?
-                        <ThumbnailFuuid value={thumbnail} />
+                        <ThumbnailFuuid value={thumbnail} data={elem} className='object-cover pr-2' />
                     :
                         <div></div>
                     }
@@ -107,18 +101,8 @@ function ViewFeedGoogleTrendsNews(props: {value: DataItemsListType}) {
             );
         }
 
-        return [elems, thumbnails];
+        return elems;
     }, [value]);
-
-    useEffect(()=>{
-        if(!thumbnails) return;
-        // Cleanup thumbnail blobs
-        return () => {
-            thumbnails?.forEach(thumb => {
-                URL.revokeObjectURL(thumb);
-            })
-        }
-    }, [thumbnails])
 
     return (
         <div className='space-y-4'>

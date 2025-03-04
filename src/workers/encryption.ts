@@ -1,5 +1,6 @@
 // import '@solana/webcrypto-ed25519-polyfill';
-import axios from 'axios';
+import axios, {AxiosError} from 'axios';
+import { gzip, inflate } from 'pako';
 import {
     encryption,
     encryptionMgs4,
@@ -9,7 +10,7 @@ import {
     certificates,
     messageStruct
 } from 'millegrilles.cryptography';
-import { gzip, inflate } from 'pako';
+import {Filehost, FilehostDirType} from "./connection.worker.ts";
 
 export type EncryptionResult = {
     format: string,
@@ -33,26 +34,7 @@ export type EncryptionBase64Result = {
     compression?: string,
 };
 
-export type EncryptionOptions = {
-    base64?: boolean,
-}
-
 export type GeneratedSecretKeyResult = { keyInfo: unknown, secret: Uint8Array, signature: keymaster.DomainSignature, cle_id: string };
-
-export type Filehost = {
-    filehost_id: string,
-    instance_id?: string | null,
-    tls_external?: string | null,
-    url_external?: string | null,
-    url_internal?: string | null,
-}
-
-export type FilehostDirType = Filehost & {
-    url?: string | null,
-    jwt?: string | null,
-    authenticated?: boolean | null,
-    lastPing?: number | null,
-};
 
 export class AppsEncryptionWorker {
     millegrillePublicKey: Uint8Array | null;
@@ -77,11 +59,6 @@ export class AppsEncryptionWorker {
             this.millegrillePublicKey = multiencoding.decodeHex(publicKey);
             this.caCertificate = wrapper;
         }
-    }
-
-    async getMillegrillePublicKey() {
-        if(!this.millegrillePublicKey) throw new Error('Key not initialized');
-        return this.millegrillePublicKey;
     }
 
     async generateSecretKey(domains: string[]): Promise<GeneratedSecretKeyResult> {
@@ -139,7 +116,7 @@ export class AppsEncryptionWorker {
         }
 
         let cipher = null;
-        let newKey = null;
+        let newKey: {signature: keymaster.DomainSignature, cles?: {[key: string]: string}} | null = null;
         let keyId = null as string | null;
         if(key) {
             // Reuse existing key
@@ -251,6 +228,28 @@ export class AppsEncryptionWorker {
         return completeBuffer;
     }
 
+    async setFilehostList(filehosts: Filehost[]) {
+        this.filehosts = filehosts;
+    }
+
+    async selectLocalFilehost(localUrl: string) {
+        try {
+            await axios({url: localUrl + 'filehost/status'})
+            // console.debug("Local filehost is available, using by default");
+
+            const url = new URL(localUrl + 'filehost');
+            this.selectedFilehost = {filehost_id: 'LOCAL', url: url.href};
+            return;
+        } catch(err: unknown) {
+            const axiosErr = err as AxiosError;
+            if(axiosErr.status) {
+                throw new Error(`Local /filehost is not available: ${axiosErr.status}`)
+            } else {
+                throw err;
+            }
+        }
+    }
+
     /**
      *
      * @param fuuid File unique identifier
@@ -291,7 +290,7 @@ export class AppsEncryptionWorker {
         }
 
         const finalOutput = await decipher.finalize();
-        let outputBlob = null as Blob | null;
+        let outputBlob: Blob | null;
         if(finalOutput && finalOutput.length > 0) {
             outputBlob = new Blob([...blobs, finalOutput]);
         } else {
@@ -299,6 +298,93 @@ export class AppsEncryptionWorker {
         }
 
         return outputBlob;
+    }
+
+    async selectFilehost(localUrl: string, filehostId: string | null) {
+        // Check if the local filehost is available first
+        if(!this.filehosts || this.filehosts.length === 0) {
+            await this.selectLocalFilehost(localUrl);
+            return;  // Successful
+        }
+
+        if(this.filehosts.length === 1) {
+            // Only one filehost, select and test
+            const filehost = this.filehosts[0];
+            // console.debug("Selecting the only filehost available: ", filehost);
+
+            // Extract url
+            if(filehost.url_external && filehost.tls_external !== 'millegrille') {
+                const url = new URL(filehost.url_external);
+                if(!url.pathname.endsWith('filehost')) {
+                    url.pathname += 'filehost';
+                }
+                filehost.url = url.href;
+            } else {
+                throw new Error('The only available filehost has no means of accessing it from a browser');
+            }
+
+            this.selectedFilehost = filehost;
+            return;
+        } else if(filehostId) {
+            // Try to pick the manually chosen filehost
+            const filehost = this.filehosts.filter(item=>item.filehost_id === filehostId).pop();
+            if(filehost) {
+                // Extract url
+                if(filehost.url_external && filehost.tls_external !== 'millegrille') {
+                    const url = new URL(filehost.url_external);
+                    if(!url.pathname.endsWith('filehost')) {
+                        url.pathname += 'filehost';
+                    }
+                    filehost.url = url.href;
+                } else {
+                    throw new Error('The only available filehost has no means of accessing it from a browser');
+                }
+
+                // console.debug("Using manually chosen filehost ", filehost);
+                this.selectedFilehost = filehost;
+                return;
+            }
+        }
+
+        // Default to local
+        await this.selectLocalFilehost(localUrl);
+
+        // Find a suitable filehost from the list. Ping the status of each to get an idea of the connection speed.
+        //let performance = {} as {[filehostId: string]: number};
+        //TODO
+    }
+
+    async authenticateFilehost(authenticationMessage: messageStruct.MilleGrillesMessage) {
+        const filehost = this.selectedFilehost;
+        if(!filehost) throw new Error('No filehost has been selected');
+        const urlString = filehost.url;
+        if(!urlString) throw new Error('No URL is available for the selected filehost');
+        const url = new URL(urlString);
+
+        // console.debug("Log into filehost ", filehost);
+        const authUrl = new URL(`https://${url.hostname}:${url.port}/filehost/authenticate`);
+
+        // console.debug('Authenticate url: %s, Signed message: %O', authUrl.href, authenticationMessage);
+        try {
+            const response = await axios({
+                method: 'POST',
+                url: authUrl.href,
+                data: authenticationMessage,
+                withCredentials: true,
+            });
+
+            // console.debug("Authentication response: ", response)
+            if(!response.data.ok) {
+                console.error("Authentication data response: ", response.data);
+                throw new Error("Authentication error: " + response.data.err);
+            }
+
+            filehost.authenticated = true;
+        } catch(err) {
+            filehost.authenticated = false;
+            filehost.jwt = null;
+            throw err;
+        }
     }
 
 }

@@ -9,6 +9,7 @@ import apiMapping from './apiMapping.json';
 // solanaInstall();
 
 const DOMAIN_DATA_COLLECTOR_NAME = 'DataCollector';
+const DOMAINE_CORETOPOLOGIE = 'CoreTopologie';
 
 type FeedPayload = {
     security_level: string,
@@ -58,6 +59,23 @@ export type GetDataItemsResponseType = MessageResponse & {
     keys: messageStruct.MilleGrillesMessage,
 };
 
+export type Filehost = {
+    filehost_id: string,
+    instance_id?: string | null,
+    tls_external?: string | null,
+    url_external?: string | null,
+    url_internal?: string | null,
+}
+
+export type FilehostDirType = Filehost & {
+    url?: string | null,
+    jwt?: string | null,
+    authenticated?: boolean | null,
+    lastPing?: number | null,
+};
+
+export type GetFilehostsResponse = MessageResponse & {list?: Filehost[] | null};
+
 export class AppsConnectionWorker extends ConnectionWorker {
 
     async authenticate(reconnect?: boolean): Promise<boolean> {
@@ -88,6 +106,11 @@ export class AppsConnectionWorker extends ConnectionWorker {
     async getDataItems(feedId: string) {
         if(!this.connection) throw new Error("Connection is not initialized");
         return await this.connection.sendRequest({feed_id: feedId}, DOMAIN_DATA_COLLECTOR_NAME, 'getDataItemsMostRecent') as Promise<GetDataItemsResponseType>;
+    }
+
+    async getFilehosts() {
+        if(!this.connection) throw new Error("Connection is not initialized");
+        return await this.connection.sendRequest({}, DOMAINE_CORETOPOLOGIE, 'getFilehosts') as GetFilehostsResponse;
     }
 
 }

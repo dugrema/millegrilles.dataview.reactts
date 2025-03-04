@@ -17,7 +17,7 @@ export type AttachedFile = {
     }
 }
 
-export type DecryptedDataItemType = DataItemType & {decrypted_data: object, files?: AttachedFile[]};
+export type DecryptedDataItemType = DataItemType & {decrypted_data: object, secretKey: Uint8Array, files?: AttachedFile[]};
 
 export type DataItemsListType = {
     feed: FeedType | null,
@@ -78,7 +78,7 @@ async function fetchData(workers: AppWorkers | null | undefined, ready: boolean,
 
         const response = await workers.connection.getDataItems(feedId);
         if (!response.ok) throw new Error(`Error loading feeds: ${response.err}`);
-        console.debug("Get feeds response", response);
+        // console.debug("Get feeds response", response);
 
         if(response.items.length === 0) {
             // No feeds, return
@@ -87,7 +87,7 @@ async function fetchData(workers: AppWorkers | null | undefined, ready: boolean,
 
         const encryptedKeyMessage = response.keys;
         const decryptedKeyMessage: DecryptedKeyMessage = await workers.connection.decryptMessage(encryptedKeyMessage) as DecryptedKeyMessage;
-        console.debug("Decryptd keys", decryptedKeyMessage);
+        // console.debug("Decryptd keys", decryptedKeyMessage);
         const decryptedKeys = decryptedKeyMessage.cles;
         if(!decryptedKeys) {
             console.error(`No decrypted key information ${decryptedKeyMessage.err}`);
@@ -130,7 +130,7 @@ async function fetchData(workers: AppWorkers | null | undefined, ready: boolean,
             // console.debug("Cleartext string", clearTextStr);
             const cleartext = JSON.parse(clearTextStr);
             // console.debug("Cleartext", cleartext);
-            mappedDataItems.push({...dataItem, decrypted_data: cleartext});
+            mappedDataItems.push({...dataItem, decrypted_data: cleartext, secretKey: key});
         }
 
         return {feed, items: mappedDataItems, keys: decryptedKeyMap};
