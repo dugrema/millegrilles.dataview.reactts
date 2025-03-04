@@ -1,5 +1,5 @@
 import {Link, useParams} from "react-router-dom";
-import {AttachedFile, DataItemsListType, useGetData} from "./GetData.ts";
+import {AttachedFile, DataItemsListType, DecryptedDataItemType, useGetData} from "./GetData.ts";
 import {useEffect, useMemo} from "react";
 import {Formatters} from "millegrilles.reactdeps.typescript";
 import ThumbnailFuuid from "./ThumbnailFuuid.tsx";
@@ -63,6 +63,7 @@ type GoogleTrendsItem = {
     pub_date: number,
     thumbnail?: string | null,
     url?: string | null,
+    group?: {title?: string, pub_date?: number, approx_traffic?: string}
 }
 
 function ViewFeedGoogleTrendsNews(props: {value: DataItemsListType}) {
@@ -73,32 +74,79 @@ function ViewFeedGoogleTrendsNews(props: {value: DataItemsListType}) {
             return [[], null];
         }
 
-        const elems: React.ReactNode[] = [];
-        for(const elem of value.items) {
-            const gelem = elem.decrypted_data as GoogleTrendsItem;
-            let thumbnail: AttachedFile | null = null;
-            if(elem.files && elem.files.length > 0) {
-                // First item is the thumbnail file
-                thumbnail = elem.files[0];
-            }
+        console.debug("Items", value);
 
+        // Group by title/date
+        const groups: {[title_date: string]: DecryptedDataItemType[]} = {};
+        const groupOrder: string[] = [];
+        for(const item of value.items) {
+            const gelem = item.decrypted_data as GoogleTrendsItem;
+            const itemGroup = gelem.group;
+            const group_key = itemGroup?.title + ' ' + itemGroup?.pub_date;
+
+            // Add item to group list
+            const items = groups[group_key];
+            if(items) {
+                items.push(item);
+            } else {
+                groups[group_key] = [item];
+                groupOrder.push(group_key);
+            }
+        }
+
+        console.debug("Groups", groups);
+
+        const elems: React.ReactNode[] = [];
+        for(const groupKey of groupOrder) {
+            const groupElems = groups[groupKey];
+            const firstGElem = groupElems[0].decrypted_data as GoogleTrendsItem;
+            const groupInfo = firstGElem.group;
             elems.push(
-                <div key={elem.data_id} className="grid grid-cols-6 space-x-4">
-                    {thumbnail?
-                        <ThumbnailFuuid value={thumbnail} data={elem} className='object-cover pr-2' />
+                <div key={groupKey} className="grid grid-cols-6 bg-indigo-800/50 p-2 font-bold">
+                    <p className='col-span-3'>{groupInfo?.title}</p>
+                    <p>({groupInfo?.approx_traffic})</p>
+                    {groupInfo?.pub_date?
+                        <Formatters.FormatterDate value={groupInfo.pub_date} />
                     :
                         <div></div>
                     }
-
-                    {gelem.url?
-                        <a href={gelem.url} target='_blank' className="col-span-4">{gelem.title}</a>
-                    :
-                        <p>{gelem.title}</p>
-                    }
-
-                    <Formatters.FormatterDate value={gelem.pub_date} />
                 </div>
-            );
+            )
+
+            for(const elem of groupElems) {
+                const gelem = elem.decrypted_data as GoogleTrendsItem;
+                let thumbnail: AttachedFile | null = null;
+                if(elem.files && elem.files.length > 0) {
+                    // First item is the thumbnail file
+                    thumbnail = elem.files[0];
+                }
+
+                let additionalInfo = '';
+                if(gelem.group) {
+                    if(gelem.group.title) {
+                        additionalInfo += gelem.group.title;
+                    }
+                    if(gelem.group.approx_traffic) {
+                        additionalInfo += ` (${gelem.group.approx_traffic})`;
+                    }
+                }
+
+                elems.push(
+                    <div key={elem.data_id} className="grid grid-cols-6 space-x-4">
+                        {thumbnail?
+                            <ThumbnailFuuid value={thumbnail} data={elem} className='object-cover pr-2' />
+                            :
+                            <div></div>
+                        }
+
+                        {gelem.url?
+                            <a href={gelem.url} target='_blank' className="col-span-5">{gelem.title}</a>
+                            :
+                            <p>{gelem.title}</p>
+                        }
+                    </div>
+                );
+            }
         }
 
         return elems;
