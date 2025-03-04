@@ -74,7 +74,7 @@ function ViewFeedGoogleTrendsNews(props: {value: DataItemsListType}) {
             return [[], null];
         }
 
-        console.debug("Items", value);
+        // console.debug("Items", value);
 
         // Group by title/date
         const groups: {[title_date: string]: DecryptedDataItemType[]} = {};
@@ -94,7 +94,7 @@ function ViewFeedGoogleTrendsNews(props: {value: DataItemsListType}) {
             }
         }
 
-        console.debug("Groups", groups);
+        // console.debug("Groups", groups);
 
         const elems: React.ReactNode[] = [];
         for(const groupKey of groupOrder) {
@@ -119,16 +119,6 @@ function ViewFeedGoogleTrendsNews(props: {value: DataItemsListType}) {
                 if(elem.files && elem.files.length > 0) {
                     // First item is the thumbnail file
                     thumbnail = elem.files[0];
-                }
-
-                let additionalInfo = '';
-                if(gelem.group) {
-                    if(gelem.group.title) {
-                        additionalInfo += gelem.group.title;
-                    }
-                    if(gelem.group.approx_traffic) {
-                        additionalInfo += ` (${gelem.group.approx_traffic})`;
-                    }
                 }
 
                 elems.push(
