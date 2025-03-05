@@ -26,7 +26,7 @@ function ViewFeed() {
             console.error(error);
             return;
         }
-        console.debug("Feed data", data);
+        // console.debug("Feed data", data);
     }, [data, error]);
 
     const pageCount = useMemo(()=>{
@@ -37,7 +37,7 @@ function ViewFeed() {
     const ViewFeedElem = useMemo(()=> {
         if(!data || !data.feed) return ViewFeedUnknown;
 
-        const feedType = data.feed.feed_type;
+        const feedType = data.feed.feed.feed_type;
         // console.debug("Feed type ", feedType)
 
         if(feedType === 'web.google_trends.news') return ViewFeedGoogleTrendsNews;
@@ -48,13 +48,19 @@ function ViewFeed() {
 
     const isEditable = useMemo(()=>{
         if(!data?.feed || !userId) return true;
-        return data.feed.user_id === userId;
+        return data.feed.feed.user_id === userId;
     }, [userId, data]);
+
+    const feedName = useMemo(()=>{
+        const name = data?.feed?.info?.name;
+        if(!name) return 'Private Feed';
+        return name;
+    }, [data])
 
     return (
         <>
             <section className='fixed top-10 md:top-12 left-0 right-0 px-2'>
-                <h1 className="text-indigo-300 text-xl font-bold pb-2">Private feeds</h1>
+                <h1 className="text-indigo-300 text-xl font-bold pb-2">{feedName}</h1>
                 <Link to="/dataviewer/private"
                       className="btn inline-block text-center text-slate-300 text bg-indigo-600 active:text-slate-800 hover:bg-indigo-800 active:bg-indigo-700">
                     Back

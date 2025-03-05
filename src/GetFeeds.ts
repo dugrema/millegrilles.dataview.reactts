@@ -1,11 +1,12 @@
 import {useMemo} from "react";
 import useSWR, {KeyedMutator} from "swr";
 
-import {multiencoding} from "millegrilles.cryptography";
+import {messageStruct, multiencoding} from "millegrilles.cryptography";
 
 import {EncryptedKeyType, FeedInformation, FeedType} from "./workers/connection.worker";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 import {AppWorkers} from "./workers/userConnect.ts";
+import {MessageResponse} from "millegrilles.reactdeps.typescript";
 
 export type DecryptedFeedType = {
     feed: FeedType,
@@ -59,6 +60,43 @@ type DecryptedKeyMessage = {
     cles?: DecryptedKey[],
 }
 
+export async function decryptFeeds(decryptedKeys: DecryptedKey[], response: MessageResponse & {
+    feeds: FeedType[];
+    keys: messageStruct.MilleGrillesMessage
+}, workers: AppWorkers) {
+    const decryptedKeyMap = decryptedKeys.reduce((acc, item) => {
+        const bytes = multiencoding.decodeBase64(item.cle_secrete_base64);
+        acc[item.cle_id] = bytes;
+        return acc;
+    }, {} as { [key: string]: Uint8Array });
+
+    // console.debug("Decrypted key map", decryptedKeyMap);
+
+    const mappedFeeds = [] as DecryptedFeedType[];
+    for await (const feed of response.feeds) {
+        const keyId = feed.encrypted_feed_information.cle_id;
+        if (!keyId) {
+            console.warn("KeyId missing for feed", feed.feed_id);
+            continue;
+        }
+        const key = decryptedKeyMap[keyId];
+        if (!key) {
+            console.warn("Unkown key for feed", feed.feed_id);
+            continue;
+        }
+        const {format, nonce, ciphertext_base64} = feed.encrypted_feed_information;
+        if (!format || !nonce) {
+            console.warn("Unkown format/nonce for feed", feed.feed_id);
+            continue;
+        }
+        const cleartextBytes = await workers.encryption.decryptMessage(format, key, nonce, ciphertext_base64);
+        const cleartext = JSON.parse(new TextDecoder().decode(cleartextBytes));
+        // console.debug("Cleartext", cleartext);
+        mappedFeeds.push({feed, info: cleartext, secretKey: key});
+    }
+    return {decryptedKeyMap, mappedFeeds};
+}
+
 async function fetchFeeds(workers: AppWorkers | null | undefined, ready: boolean, props: UseGetFeedsProps | null | undefined): Promise<FeedsListType | null> {
     if(!workers || !ready) return null;
 
@@ -85,36 +123,7 @@ async function fetchFeeds(workers: AppWorkers | null | undefined, ready: boolean
             return null;
         }
 
-        const decryptedKeyMap = decryptedKeys.reduce((acc, item)=>{
-            const bytes = multiencoding.decodeBase64(item.cle_secrete_base64);
-            acc[item.cle_id] = bytes;
-            return acc;
-        }, {} as {[key: string]: Uint8Array});
-
-        // console.debug("Decrypted key map", decryptedKeyMap);
-
-        const mappedFeeds = [] as DecryptedFeedType[];
-        for await (const feed of response.feeds) {
-            const keyId = feed.encrypted_feed_information.cle_id;
-            if(!keyId) {
-                console.warn("KeyId missing for feed", feed.feed_id);
-                continue;
-            }
-            const key = decryptedKeyMap[keyId];
-            if(!key) {
-                console.warn("Unkown key for feed", feed.feed_id);
-                continue;
-            }
-            const {format, nonce, ciphertext_base64} = feed.encrypted_feed_information;
-            if(!format || !nonce) {
-                console.warn("Unkown format/nonce for feed", feed.feed_id);
-                continue;
-            }
-            const cleartextBytes = await workers.encryption.decryptMessage(format, key, nonce, ciphertext_base64);
-            const cleartext = JSON.parse(new TextDecoder().decode(cleartextBytes));
-            // console.debug("Cleartext", cleartext);
-            mappedFeeds.push({feed, info: cleartext, secretKey: key});
-        }
+        const {decryptedKeyMap, mappedFeeds} = await decryptFeeds(decryptedKeys, response, workers);
 
         return {feeds: mappedFeeds, keys: decryptedKeyMap};
     } catch(error) {

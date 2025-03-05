@@ -4,9 +4,10 @@ import useSWR, {KeyedMutator} from "swr";
 
 import {multiencoding} from "millegrilles.cryptography";
 
-import {DataItemType, EncryptedKeyType, FeedType} from "./workers/connection.worker";
+import {DataItemType, EncryptedKeyType} from "./workers/connection.worker";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 import {AppWorkers} from "./workers/userConnect.ts";
+import {DecryptedFeedType, decryptFeeds} from "./GetFeeds.ts";
 
 export type AttachedFile = {
     fuuid: string,
@@ -20,7 +21,7 @@ export type AttachedFile = {
 export type DecryptedDataItemType = DataItemType & {decrypted_data: object, secretKey: Uint8Array, files?: AttachedFile[]};
 
 export type DataItemsListType = {
-    feed: FeedType | null,
+    feed: DecryptedFeedType | null,
     items: DecryptedDataItemType[],
     keys: EncryptedKeyType,
     estimated_count?: number | null,
@@ -80,11 +81,20 @@ async function fetchData(workers: AppWorkers | null | undefined, ready: boolean,
         const feedResponse = await workers.connection.getFeeds([feedId]);
         if(!feedResponse.ok) throw new Error('Invalid feed id: ' + feedId);
         if(feedResponse.feeds.length === 0) throw new Error("Feed not found: " + feedId);
-        const feed = feedResponse.feeds[0];
+
+        // Decrypt feed
+        const encryptedFeedKeyMessage = feedResponse.keys;
+        const decryptedFeedKeyMessage: DecryptedKeyMessage = await workers.connection.decryptMessage(encryptedFeedKeyMessage) as DecryptedKeyMessage;
+        const feedKeys = decryptedFeedKeyMessage.cles;
+        // console.debug("Decrypted feed keys", feedKeys);
+        if(!feedKeys) throw new Error("Unable to decrypt feed");
+        const {mappedFeeds} = await decryptFeeds(feedKeys, feedResponse, workers);
+        const decryptedFeedInfo = mappedFeeds[0];
+        // console.debug("Decrypted feed", decryptedFeedInfo);
 
         const response = await workers.connection.getDataItems(feedId, skip, limit);
         if (!response.ok) throw new Error(`Error loading feeds: ${response.err}`);
-        console.debug("Get feeds response", response);
+        // console.debug("Get feeds response", response);
 
         if(response.items.length === 0) {
             // No feeds, return
@@ -139,7 +149,7 @@ async function fetchData(workers: AppWorkers | null | undefined, ready: boolean,
             mappedDataItems.push({...dataItem, decrypted_data: cleartext, secretKey: key});
         }
 
-        return {feed, items: mappedDataItems, keys: decryptedKeyMap, estimated_count: response.estimated_count};
+        return {feed: decryptedFeedInfo, items: mappedDataItems, keys: decryptedKeyMap, estimated_count: response.estimated_count};
     } catch(error) {
         console.error("Error loading feeds", error);
         throw error;
