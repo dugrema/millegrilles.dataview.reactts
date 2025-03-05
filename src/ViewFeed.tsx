@@ -133,14 +133,16 @@ function ViewFeedGoogleTrendsNews(props: {value: DataItemsListType}) {
             const firstGElem = groupElems[0].decrypted_data as GoogleTrendsItem;
             const groupInfo = firstGElem.group;
             elems.push(
-                <div key={groupKey} className="grid grid-cols-6 bg-indigo-800/50 p-2 font-bold">
+                <div key={groupKey} className="grid grid-cols-3 md:grid-cols-6 bg-indigo-800/50 p-2 font-bold">
                     <p className='col-span-3'>{groupInfo?.title}</p>
                     <p>({groupInfo?.approx_traffic})</p>
-                    {groupInfo?.pub_date?
-                        <Formatters.FormatterDate value={groupInfo.pub_date} />
-                    :
-                        <div></div>
-                    }
+                    <p className='col-span-2 md:col-span-1 text-right'>
+                        {groupInfo?.pub_date?
+                            <Formatters.FormatterDate value={groupInfo.pub_date} />
+                        :
+                            <></>
+                        }
+                    </p>
                 </div>
             )
 
@@ -155,13 +157,13 @@ function ViewFeedGoogleTrendsNews(props: {value: DataItemsListType}) {
                 elems.push(
                     <div key={elem.data_id} className="grid grid-cols-6 space-x-4">
                         {thumbnail?
-                            <ThumbnailFuuid value={thumbnail} data={elem} className='object-cover pr-2' />
+                            <ThumbnailFuuid value={thumbnail} data={elem} className='object-cover pr-2 col-span-6 sm:col-span-3 md:col-span-2' />
                             :
                             <div></div>
                         }
 
                         {gelem.url?
-                            <a href={gelem.url} target='_blank' className="col-span-5">{gelem.title}</a>
+                            <a href={gelem.url} target='_blank' className="col-span-6 sm:col-span-3 md:col-span-4">{gelem.title}</a>
                             :
                             <p>{gelem.title}</p>
                         }
