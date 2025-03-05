@@ -90,7 +90,7 @@ function FeedItem(props: FeedItemType) {
     const {userId} = useWorkers();
 
     const classNameInner = useMemo(()=>{
-        let classNameInner = 'grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6';
+        let classNameInner = 'grid grid-cols-2 sm:grid-cols-6';
         if(className) classNameInner += ' ' + className;
         return classNameInner;
     }, [className]);
@@ -101,22 +101,22 @@ function FeedItem(props: FeedItemType) {
     }, [value, userId]);
 
     return (
-        <div className={classNameInner}>
-            <Link to={`feed/${value.feed.feed_id}`} className="col-span-4 md:col-span-2">{value.info?.name}</Link>
+        <Link to={`feed/${value.feed.feed_id}`} className={classNameInner}>
+            <div className="col-span-6 md:col-span-2">{value.info?.name}</div>
             <p className="col-span-3 md:col-span-2">{value.feed.feed_type}</p>
-            <p>
+            <p className="sm:col-span-2 md:col-span-1">
                 {value.feed.active?'Active':'Inactive'}
                 {canDelete?<></>:
                     <span className='pl-1'>(Shared)</span>
                 }
             </p>
-            <div className='text-right pr-2'>
+            <div className='text-right pr-2 col-span-4 sm:col-span-1'>
                 {canDelete?
-                    <ActionButton onClick={props.onDelete} value={value.feed.feed_id} varwidth={8}>
+                    <ActionButton onClick={props.onDelete} value={value.feed.feed_id} varwidth={8} confirm={true}>
                         <img src={TrashIcon} alt="Delete feed" className="w-8" />
                     </ActionButton>
                 :<></>}
             </div>
-        </div>
+        </Link>
     )
 }
