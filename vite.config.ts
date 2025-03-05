@@ -9,14 +9,10 @@ export default defineConfig(({command})=> {
     const config = {
         base: '/dataviewer',
         plugins: [
-            // comlink(),
             nodePolyfills({ include: [
                 // For libsodium
                 'crypto', 'stream', 'vm',
-                // For solana
-                'process',
-                ] }),
-            // solanaInstallPlugin(),
+            ] }),
             tailwindcss(),
             react(),
         ]

@@ -58,7 +58,7 @@ function FeedTypeList() {
         return data.feeds.map(feed => {
             return (
                 <FeedItem key={feed.feed.feed_id} value={feed} onDelete={deleteFeed}
-                          className="odd:bg-indigo-600/30 even:bg-indigo-800/30 hover:bg-indigo-700 px-2 py-1 h-12" />
+                          className="odd:bg-indigo-600/30 even:bg-indigo-800/30 hover:bg-indigo-700 px-2 py-2 md:h-12" />
             )
         });
     }, [data, deleteFeed]);
@@ -90,7 +90,7 @@ function FeedItem(props: FeedItemType) {
     const {userId} = useWorkers();
 
     const classNameInner = useMemo(()=>{
-        let classNameInner = 'grid grid-cols-2 md:grid-cols-6';
+        let classNameInner = 'grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6';
         if(className) classNameInner += ' ' + className;
         return classNameInner;
     }, [className]);
@@ -102,8 +102,8 @@ function FeedItem(props: FeedItemType) {
 
     return (
         <div className={classNameInner}>
-            <Link to={`feed/${value.feed.feed_id}`} className="col-span-2">{value.info?.name}</Link>
-            <p className="col-span-2">{value.feed.feed_type}</p>
+            <Link to={`feed/${value.feed.feed_id}`} className="col-span-4 md:col-span-2">{value.info?.name}</Link>
+            <p className="col-span-3 md:col-span-2">{value.feed.feed_type}</p>
             <p>
                 {value.feed.active?'Active':'Inactive'}
                 {canDelete?<></>:
