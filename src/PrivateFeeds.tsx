@@ -56,7 +56,10 @@ function FeedTypeList() {
         );
 
         return data.feeds.map(feed => {
-            return <FeedItem key={feed.feed.feed_id} value={feed} onDelete={deleteFeed} />
+            return (
+                <FeedItem key={feed.feed.feed_id} value={feed} onDelete={deleteFeed}
+                          className="odd:bg-indigo-600/30 even:bg-indigo-800/30 hover:bg-indigo-700 px-2 py-1 h-12" />
+            )
         });
     }, [data, deleteFeed]);
 
@@ -75,17 +78,44 @@ function FeedTypeList() {
     );
 }
 
-function FeedItem(props: {value: DecryptedFeedType, onDelete: (e: React.MouseEvent<HTMLButtonElement>) => Promise<void>}) {
-    const {value} = props;
+type FeedItemType = {
+    value: DecryptedFeedType,
+    onDelete: (e: React.MouseEvent<HTMLButtonElement>) => Promise<void>,
+    className?: string,
+};
+
+function FeedItem(props: FeedItemType) {
+    const {value, className} = props;
+
+    const {userId} = useWorkers();
+
+    const classNameInner = useMemo(()=>{
+        let classNameInner = 'grid grid-cols-2 md:grid-cols-6';
+        if(className) classNameInner += ' ' + className;
+        return classNameInner;
+    }, [className]);
+
+    const canDelete = useMemo(()=>{
+        if(!value || !userId) return false;
+        return value.feed.user_id === userId;
+    }, [value, userId]);
+
     return (
-        <div className="grid grid-cols-2 md:grid-cols-4 odd:bg-indigo-600/40 even:bg-indigo-800/40 hover:bg-indigo-700 px-2 py-1">
-            <Link to={`feed/${value.feed.feed_id}`} className="col-span-2 md:col-span-1">{value.info?.name}</Link>
-            <p className="col-span-2 md:col-span-1">{value.feed.feed_type}</p>
-            <p>{value.feed.active?'Active':'Inactive'}</p>
-            <div>
-                <ActionButton onClick={props.onDelete} value={value.feed.feed_id} varwidth={10}>
-                    <img src={TrashIcon} alt="Delete feed" className="w-8" />
-                </ActionButton>
+        <div className={classNameInner}>
+            <Link to={`feed/${value.feed.feed_id}`} className="col-span-2">{value.info?.name}</Link>
+            <p className="col-span-2">{value.feed.feed_type}</p>
+            <p>
+                {value.feed.active?'Active':'Inactive'}
+                {canDelete?<></>:
+                    <span className='pl-1'>(Shared)</span>
+                }
+            </p>
+            <div className='text-right pr-2'>
+                {canDelete?
+                    <ActionButton onClick={props.onDelete} value={value.feed.feed_id} varwidth={8}>
+                        <img src={TrashIcon} alt="Delete feed" className="w-8" />
+                    </ActionButton>
+                :<></>}
             </div>
         </div>
     )

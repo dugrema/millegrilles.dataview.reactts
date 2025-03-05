@@ -3,10 +3,12 @@ import {AttachedFile, DataItemsListType, DecryptedDataItemType, useGetData} from
 import {useEffect, useMemo} from "react";
 import {Formatters} from "millegrilles.reactdeps.typescript";
 import ThumbnailFuuid from "./ThumbnailFuuid.tsx";
+import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 
 function ViewFeed() {
 
     const {feedId} = useParams();
+    const {userId} = useWorkers();
 
     const {data, error} = useGetData({feedId});
 
@@ -30,6 +32,11 @@ function ViewFeed() {
         return ViewFeedUnknown;
     }, [data]) as React.ElementType;
 
+    const isEditable = useMemo(()=>{
+        if(!data?.feed || !userId) return true;
+        return data.feed.user_id === userId;
+    }, [userId, data]);
+
     return (
         <>
             <section className='fixed top-10 md:top-12 left-0 right-0 px-2'>
@@ -39,10 +46,12 @@ function ViewFeed() {
                     Back
                 </Link>
 
-                <Link to={`/dataviewer/private/feed/${feedId}/update`}
-                      className="btn inline-block text-center text-slate-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
-                    Edit
-                </Link>
+                {isEditable?
+                    <Link to={`/dataviewer/private/feed/${feedId}/update`}
+                          className="btn inline-block text-center text-slate-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
+                        Edit
+                    </Link>
+                :<></>}
             </section>
 
             <section className="w-full fixed top-32 bottom-10 px-2 overflow-y-auto">

@@ -30,6 +30,7 @@ export type UpdateFeedPayload = FeedPayload & {
 
 export type FeedType = NewFeedPayload & {
     feed_id: string,
+    user_id: string,
 };
 
 export type EncryptedKeyType = {[keyId: string]: Uint8Array};

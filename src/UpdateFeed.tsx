@@ -124,6 +124,7 @@ export function FeedTypeList(props: {id?: string, className?: string, value: str
 export function SecurityLevelList(props: {id?: string, className?: string, value: string, onChange: React.ChangeEventHandler<HTMLSelectElement>}) {
     return (
         <select id={props.id} className={props.className} value={props.value} onChange={props.onChange}>
+            <option value='3.protege'>Protected</option>
             <option value='2.prive'>Private</option>
             <option value='1.public'>Public</option>
         </select>
