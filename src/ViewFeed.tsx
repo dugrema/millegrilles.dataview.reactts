@@ -153,21 +153,17 @@ function ViewFeedGoogleTrendsNews(props: {value: DataItemsListType}) {
                     // First item is the thumbnail file
                     thumbnail = elem.files[0];
                 }
+                const url = gelem.url || '#';
 
                 elems.push(
-                    <div key={elem.data_id} className="grid grid-cols-6 space-x-4">
+                    <a key={elem.data_id} href={url} target='_blank' className="grid grid-cols-6 space-x-4">
                         {thumbnail?
                             <ThumbnailFuuid value={thumbnail} data={elem} className='object-cover pr-2 col-span-6 sm:col-span-3 md:col-span-2' />
                             :
                             <div></div>
                         }
-
-                        {gelem.url?
-                            <a href={gelem.url} target='_blank' className="col-span-6 sm:col-span-3 md:col-span-4">{gelem.title}</a>
-                            :
-                            <p>{gelem.title}</p>
-                        }
-                    </div>
+                        <p className="col-span-6 sm:col-span-3 md:col-span-4">{gelem.title}</p>
+                    </a>
                 );
             }
         }
