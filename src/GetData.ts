@@ -23,6 +23,7 @@ export type DataItemsListType = {
     feed: FeedType | null,
     items: DecryptedDataItemType[],
     keys: EncryptedKeyType,
+    estimated_count?: number | null,
 };
 
 type UseGetFeedsDecryptedType = {
@@ -34,6 +35,8 @@ type UseGetFeedsDecryptedType = {
 
 export type UseGetDataProps = {
     feedId?: string | null,
+    skip?: number | null,
+    limit?: number | null,
 }
 
 /**
@@ -46,7 +49,7 @@ export function useGetData(props: UseGetDataProps): UseGetFeedsDecryptedType {
     const [fetcherKey, fetcherFunction] = useMemo(()=>{
         if(!workers || !ready) return ['notReady', null];
 
-        const fetcherKey = ['data', props.feedId];
+        const fetcherKey = ['data', props.feedId, props.skip, props.limit];
         const fetcherFunction = async () => fetchData(workers, ready?ready:false, props);
         return [fetcherKey, fetcherFunction]
     }, [workers, ready, props]);
@@ -70,15 +73,18 @@ async function fetchData(workers: AppWorkers | null | undefined, ready: boolean,
     const feedId = props.feedId;
     if(!workers || !ready || !feedId) return null;
 
+    const skip = props.skip || 0;
+    const limit = props.limit || 50;
+
     try {
         const feedResponse = await workers.connection.getFeeds([feedId]);
         if(!feedResponse.ok) throw new Error('Invalid feed id: ' + feedId);
         if(feedResponse.feeds.length === 0) throw new Error("Feed not found: " + feedId);
         const feed = feedResponse.feeds[0];
 
-        const response = await workers.connection.getDataItems(feedId);
+        const response = await workers.connection.getDataItems(feedId, skip, limit);
         if (!response.ok) throw new Error(`Error loading feeds: ${response.err}`);
-        // console.debug("Get feeds response", response);
+        console.debug("Get feeds response", response);
 
         if(response.items.length === 0) {
             // No feeds, return
@@ -133,7 +139,7 @@ async function fetchData(workers: AppWorkers | null | undefined, ready: boolean,
             mappedDataItems.push({...dataItem, decrypted_data: cleartext, secretKey: key});
         }
 
-        return {feed, items: mappedDataItems, keys: decryptedKeyMap};
+        return {feed, items: mappedDataItems, keys: decryptedKeyMap, estimated_count: response.estimated_count};
     } catch(error) {
         console.error("Error loading feeds", error);
         throw error;

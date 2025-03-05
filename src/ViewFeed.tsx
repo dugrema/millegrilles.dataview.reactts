@@ -1,24 +1,38 @@
 import {Link, useParams} from "react-router-dom";
 import {AttachedFile, DataItemsListType, DecryptedDataItemType, useGetData} from "./GetData.ts";
-import {useEffect, useMemo} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {Formatters} from "millegrilles.reactdeps.typescript";
 import ThumbnailFuuid from "./ThumbnailFuuid.tsx";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
+import {PageSelectors} from "./BrowsingElements.tsx";
+
+const PAGE_SIZE = 35;
 
 function ViewFeed() {
 
     const {feedId} = useParams();
     const {userId} = useWorkers();
 
-    const {data, error} = useGetData({feedId});
+    const [page, setPage] = useState(1);
+
+    const skip = useMemo(()=>{
+        return (page - 1) * PAGE_SIZE;
+    }, [page]);
+
+    const {data, error} = useGetData({feedId, skip, limit: PAGE_SIZE});
 
     useEffect(()=>{
         if(error) {
             console.error(error);
             return;
         }
-        // console.debug("Feed data", data);
+        console.debug("Feed data", data);
     }, [data, error]);
+
+    const pageCount = useMemo(()=>{
+        if(!data?.estimated_count) return 0;
+        return Math.ceil(data.estimated_count / PAGE_SIZE);
+    }, [data]);
 
     const ViewFeedElem = useMemo(()=> {
         if(!data || !data.feed) return ViewFeedUnknown;
@@ -55,7 +69,9 @@ function ViewFeed() {
             </section>
 
             <section className="w-full fixed top-32 bottom-10 px-2 overflow-y-auto">
+                <PageSelectors page={page} setPage={setPage} pageCount={pageCount} />
                 <ViewFeedElem value={data} />
+                <PageSelectors page={page} setPage={setPage} pageCount={pageCount} />
             </section>
         </>
     )
