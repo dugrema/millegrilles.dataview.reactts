@@ -17,6 +17,7 @@ export type WorkersState = {
     username?: string | null,
     idmg?: string | null,
     userId?: string | null,
+    filehostAuthenticated?: boolean,
 };
 
 export type InitWorkersResult = {

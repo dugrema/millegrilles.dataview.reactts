@@ -11,11 +11,11 @@ type ThumbnailFuuidProps = {
 function ThumbnailFuuid(props: ThumbnailFuuidProps) {
     const {value, data, className} = props;
 
-    const {workers, ready} = useWorkers();
+    const {workers, ready, filehostAuthenticated} = useWorkers();
     const [blobUrl, setBlobUrl] = useState('');
 
     useEffect(()=>{
-        if(!workers || !ready || !value) return;
+        if(!workers || !ready || !filehostAuthenticated || !value) return;
         let blobUrl: string | null = null;
         workers.encryption.openFile(value.fuuid, data.secretKey, value.decryption)
             .then(blobInner=>{
@@ -33,7 +33,7 @@ function ThumbnailFuuid(props: ThumbnailFuuidProps) {
                 URL.revokeObjectURL(blobUrl);
             }
         }
-    }, [value, workers, ready, data, setBlobUrl]);
+    }, [value, workers, ready, filehostAuthenticated, data, setBlobUrl]);
 
     if(!blobUrl) return <div></div>;
 

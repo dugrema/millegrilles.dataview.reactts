@@ -13,13 +13,13 @@ const unselectedClassname = ' bg-indigo-900 bg-opacity-30';
 function Menu() {
 
     const location = useLocation();
-    const {ready} = useWorkers();
+    const {ready, filehostAuthenticated} = useWorkers();
 
     const cssDisconnected = useMemo(()=>{
         if(!ready) return ' bg-red-500';
-        // if(!filehostAuthenticated) return ' bg-amber-700'
+        if(!filehostAuthenticated) return ' bg-amber-700'
         return '';
-    }, [ready]);
+    }, [ready, filehostAuthenticated]);
 
     const selectedSection = useMemo(()=>{
         const locationPath = location.pathname;
