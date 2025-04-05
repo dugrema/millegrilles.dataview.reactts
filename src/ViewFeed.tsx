@@ -159,7 +159,20 @@ function ViewFeedGoogleTrendsNews(props: {value: DataItemsListType}) {
                     // First item is the thumbnail file
                     thumbnail = elem.files[0];
                 }
-                const url = gelem.url || '#';
+                let url = '#';
+                let newsDomain = '';
+                if(gelem.url) {
+                    url = gelem.url;
+                    try {
+                        newsDomain = new URL(gelem.url).hostname;
+                        if(newsDomain.startsWith('www.')) {
+                            newsDomain = newsDomain.slice(4);
+                        }
+                    } catch (err) {
+                        // Error reading url
+                        console.error(`Error reading url ${url}: ${err}`);
+                    }
+                }
 
                 elems.push(
                     <a key={elem.data_id} href={url} target='_blank' className="grid grid-cols-6 space-x-4">
@@ -168,7 +181,11 @@ function ViewFeedGoogleTrendsNews(props: {value: DataItemsListType}) {
                             :
                             <div></div>
                         }
-                        <p className="col-span-6 sm:col-span-3 md:col-span-4">{gelem.title}</p>
+                        <p className="col-span-6 sm:col-span-3 md:col-span-4">
+                            {gelem.title}
+                            {newsDomain?<span className="block text-xs">{newsDomain}</span>:<></>}
+                        </p>
+
                     </a>
                 );
             }
@@ -228,7 +245,7 @@ function DateSelectors(props: DateSelectorProps) {
     }, [])
 
     return (
-        <div className="grid grid-cols-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3">
             <div className="bg-indigo-800">
                 <span className="pr-2">Start</span>
                 <Datetime
