@@ -105,9 +105,24 @@ export class AppsConnectionWorker extends ConnectionWorker {
         return await this.connection.sendRequest({feed_ids: feedIds}, DOMAIN_DATA_COLLECTOR_NAME, 'getFeeds') as Promise<GetFeedsResponseType>;
     }
 
-    async getDataItems(feedId: string, skip?: number | null, limit?: number | null) {
+    async getDataItems(feedId: string, skip?: number | null, limit?: number | null, start_date?: Date | null, end_date?: Date | null) {
         if(!this.connection) throw new Error("Connection is not initialized");
-        return await this.connection.sendRequest({feed_id: feedId, skip, limit}, DOMAIN_DATA_COLLECTOR_NAME, 'getDataItemsMostRecent') as Promise<GetDataItemsResponseType>;
+        if(start_date && end_date) {
+            return await this.connection.sendRequest({
+                feed_id: feedId,
+                skip,
+                limit,
+                // Convert dates to epoch seconds
+                start_date: Math.floor(start_date.getTime()/1000),
+                end_date: Math.floor(end_date.getTime()/1000),
+            }, DOMAIN_DATA_COLLECTOR_NAME, 'getDataItemsDateRange') as Promise<GetDataItemsResponseType>;
+        } else {
+            return await this.connection.sendRequest({
+                feed_id: feedId,
+                skip,
+                limit
+            }, DOMAIN_DATA_COLLECTOR_NAME, 'getDataItemsMostRecent') as Promise<GetDataItemsResponseType>;
+        }
     }
 
     async getFilehosts() {

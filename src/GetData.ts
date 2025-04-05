@@ -38,6 +38,8 @@ export type UseGetDataProps = {
     feedId?: string | null,
     skip?: number | null,
     limit?: number | null,
+    start_date: Date | null,
+    end_date: Date | null,
 }
 
 /**
@@ -50,7 +52,14 @@ export function useGetData(props: UseGetDataProps): UseGetFeedsDecryptedType {
     const [fetcherKey, fetcherFunction] = useMemo(()=>{
         if(!workers || !ready) return ['notReady', null];
 
-        const fetcherKey = ['data', props.feedId, props.skip, props.limit];
+        // Only use dates if both are present and the range is valid
+        let start_date = null as Date | null, end_date = null as Date | null;
+        if(props.start_date && props.end_date && props.start_date < props.end_date) {
+            start_date = props.start_date;
+            end_date = props.end_date;
+        }
+
+        const fetcherKey = ['data', props.feedId, props.skip, props.limit, start_date, end_date];
         const fetcherFunction = async () => fetchData(workers, ready?ready:false, props);
         return [fetcherKey, fetcherFunction]
     }, [workers, ready, props]);
@@ -76,6 +85,8 @@ async function fetchData(workers: AppWorkers | null | undefined, ready: boolean,
 
     const skip = props.skip || 0;
     const limit = props.limit || 50;
+    const start_date = props.start_date || null;
+    const end_date = props.end_date || null;
 
     try {
         const feedResponse = await workers.connection.getFeeds([feedId]);
@@ -92,7 +103,7 @@ async function fetchData(workers: AppWorkers | null | undefined, ready: boolean,
         const decryptedFeedInfo = mappedFeeds[0];
         // console.debug("Decrypted feed", decryptedFeedInfo);
 
-        const response = await workers.connection.getDataItems(feedId, skip, limit);
+        const response = await workers.connection.getDataItems(feedId, skip, limit, start_date, end_date);
         if (!response.ok) throw new Error(`Error loading feeds: ${response.err}`);
         // console.debug("Get feeds response", response);
 

@@ -2,6 +2,7 @@ import {lazy} from "react";
 import {ErrorPage} from "./Error.tsx";
 import {createBrowserRouter, RouterProvider} from "react-router-dom";
 
+import 'react-datetime/css/react-datetime.css';
 import './App.css'
 import WelcomePage from "./WelcomePage.tsx";
 import createPrivateReactBrowserChildren from "./privateRouting.tsx";

@@ -6,7 +6,8 @@
   "requests": [
     {"domain": "CoreTopologie", "action": "getFilehosts", "exchange": "1.public"},
     {"domain": "DataCollector", "action": "getFeeds"},
-    {"domain": "DataCollector", "action": "getDataItemsMostRecent"}
+    {"domain": "DataCollector", "action": "getDataItemsMostRecent"},
+    {"domain": "DataCollector", "action": "getDataItemsDateRange"}
   ],
   "commands": [
     {"domain": "DataCollector", "action": "createFeed"},

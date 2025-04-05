@@ -1,6 +1,9 @@
+import {useCallback, useEffect, useMemo, useState} from "react";
 import {Link, useParams} from "react-router-dom";
+import Datetime from 'react-datetime';
+import {Moment} from 'moment';
+
 import {AttachedFile, DataItemsListType, DecryptedDataItemType, useGetData} from "./GetData.ts";
-import {useEffect, useMemo, useState} from "react";
 import {Formatters} from "millegrilles.reactdeps.typescript";
 import ThumbnailFuuid from "./ThumbnailFuuid.tsx";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
@@ -14,12 +17,14 @@ function ViewFeed() {
     const {userId} = useWorkers();
 
     const [page, setPage] = useState(1);
+    const [startDate, setStartDate] = useState(null as Date | null);
+    const [endDate, setEndDate] = useState(null as Date | null);
 
     const skip = useMemo(()=>{
         return (page - 1) * PAGE_SIZE;
     }, [page]);
 
-    const {data, error} = useGetData({feedId, skip, limit: PAGE_SIZE});
+    const {data, error} = useGetData({feedId, skip, limit: PAGE_SIZE, start_date: startDate, end_date: endDate});
 
     useEffect(()=>{
         if(error) {
@@ -75,6 +80,7 @@ function ViewFeed() {
             </section>
 
             <section className="w-full fixed top-32 bottom-10 px-2 overflow-y-auto">
+                <DateSelectors startDate={startDate} endDate={endDate} setStartDate={setStartDate} setEndDate={setEndDate}/>
                 <PageSelectors page={page} setPage={setPage} pageCount={pageCount} />
                 <ViewFeedElem value={data} />
                 <PageSelectors page={page} setPage={setPage} pageCount={pageCount} />
@@ -174,6 +180,83 @@ function ViewFeedGoogleTrendsNews(props: {value: DataItemsListType}) {
     return (
         <div className='space-y-4'>
             {dataElems}
+        </div>
+    )
+}
+
+type DateSelectorProps = {
+    startDate: Date | null,
+    endDate: Date | null,
+    setStartDate: (date: Date | null)=>void,
+    setEndDate: (date: Date | null)=>void
+}
+
+const DATETIME_DATE_FORMAT = 'YYYY-MM-DD';
+const DATETIME_TIME_FORMAT = 'HH:mm:ss';
+
+function DateSelectors(props: DateSelectorProps) {
+    const {startDate, endDate, setStartDate, setEndDate} = props;
+
+    const clearDates = useCallback(() => {
+        console.debug("Clear dates")
+        setStartDate(null);
+        setEndDate(null);
+    }, [setStartDate, setEndDate]);
+
+    const onChangeStartDate = useCallback((date: string | Moment) => {
+        let innerDate: Date;
+        if(typeof date === 'string') {
+            innerDate = new Date(date);
+        } else {
+            innerDate = date.toDate();
+        }
+        setStartDate(innerDate);
+    }, [setStartDate]);
+
+    const onChangeEndDate = useCallback((date: string | Moment) => {
+        let innerDate: Date;
+        if(typeof date === 'string') {
+            innerDate = new Date(date);
+        } else {
+            innerDate = date.toDate();
+        }
+        setEndDate(innerDate);
+    }, [setEndDate]);
+
+    useEffect(()=>{
+
+    }, [])
+
+    return (
+        <div className="grid grid-cols-3">
+            <div className="bg-indigo-800">
+                <span className="pr-2">Start</span>
+                <Datetime
+                    value={startDate || undefined}
+                    onChange={onChangeStartDate}
+                    dateFormat={DATETIME_DATE_FORMAT}
+                    timeFormat={DATETIME_TIME_FORMAT}
+                    closeOnSelect={true}
+                    className="inline-block"
+                />
+            </div>
+            <div className="bg-indigo-800">
+                <span className="pr-2">End</span>
+                <Datetime
+                    value={endDate || undefined}
+                    onChange={onChangeEndDate}
+                    dateFormat={DATETIME_DATE_FORMAT}
+                    timeFormat={DATETIME_TIME_FORMAT}
+                    closeOnSelect={true}
+                    className="inline-block"
+                />
+            </div>
+            <div>
+                <button onClick={clearDates}
+                    className="btn text-slate-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
+                        Clear
+                </button>
+            </div>
         </div>
     )
 }
