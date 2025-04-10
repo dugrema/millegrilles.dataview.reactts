@@ -14,11 +14,12 @@ const PAGE_SIZE = 35;
 function ViewFeed() {
 
     const {feedId} = useParams();
-    const {userId} = useWorkers();
+    const {userId, ready, workers} = useWorkers();
 
     const [page, setPage] = useState(1);
     const [startDate, setStartDate] = useState(null as Date | null);
     const [endDate, setEndDate] = useState(null as Date | null);
+    const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
     const skip = useMemo(()=>{
         return (page - 1) * PAGE_SIZE;
@@ -51,10 +52,20 @@ function ViewFeed() {
         return ViewFeedUnknown;
     }, [data]) as React.ElementType;
 
+    useEffect(()=> {
+        if(!workers || !ready) return;
+        workers.connection.getCertificate()
+            .then(certificate=>{
+                const isAdmin = certificate?.extensions?.adminGrants?.includes("proprietaire") || false;
+                setIsAdmin(isAdmin);
+            })
+            .catch(err=>console.warn("Error loading certificate", err));
+    }, [workers, ready, setIsAdmin]);
+
     const isEditable = useMemo(()=>{
-        if(!data?.feed || !userId) return true;
+        if(isAdmin || !data?.feed || !userId) return true;
         return data.feed.feed.user_id === userId;
-    }, [userId, data]);
+    }, [userId, data, isAdmin]);
 
     const feedName = useMemo(()=>{
         const name = data?.feed?.info?.name;

@@ -130,6 +130,11 @@ export class AppsConnectionWorker extends ConnectionWorker {
         return await this.connection.sendRequest({}, DOMAINE_CORETOPOLOGIE, 'getFilehosts') as GetFilehostsResponse;
     }
 
+    async getCertificate() {
+        if(!this.connection) throw new Error("Connection is not initialized");
+        return this.connection.getMessageFactoryCertificate();
+    }
+
 }
 
 const WORKER = new AppsConnectionWorker();
