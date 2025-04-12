@@ -12,7 +12,7 @@ export type DecryptedFeedType = {
     feed: FeedType,
     info: FeedInformation | null,
     secretKey: Uint8Array | null,
-    custom_code: string | null,
+    custom_code?: string | null,
 }
 
 type FeedsListType = {
