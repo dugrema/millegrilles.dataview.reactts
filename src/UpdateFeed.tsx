@@ -18,7 +18,7 @@ function UpdateFeedPage() {
     const feed = useMemo(()=>{
         if(error || isLoading) return null;
         const feeds = data?.feeds;
-        console.debug("feed loading? %s Feeds: %O", isLoading, feeds);
+        // console.debug("feed loading? %s Feeds: %O", isLoading, feeds);
         if(feeds?.length === 1) return feeds[0];
         console.error("Error loading feed to update: ", feeds);
         return null;
@@ -32,6 +32,7 @@ function UpdateFeedPage() {
     const [active, setActive] = useState(true);
     const [pollingRate, setPollingRate] = useState("");
     const [security, setSecurity] = useState("2.prive");
+    const [customCode, setCustomCode] = useState("");
 
     // Prevent screen updates when starting to edit
     const [locked, setLocked] = useState(false);
@@ -48,7 +49,8 @@ function UpdateFeedPage() {
         setActive(feed.feed.active!==false);
         setSecurity(feed.feed.security_level || "");
         setPollingRate(feed.feed.poll_rate?""+feed.feed.poll_rate:"");
-    }, [feed, locked, setLocked, setName, setUrl, setUsername, setPassword, setDecrypted, setActive, setPollingRate, setSecurity]);
+        setCustomCode(feed.info?.custom_code || "");
+    }, [feed, locked, setLocked, setName, setUrl, setUsername, setPassword, setDecrypted, setActive, setPollingRate, setSecurity, setCustomCode]);
 
     const addCallback = useCallback(async () => {
         if(!workers || !ready || !feed || !data) throw new Error('Connection not ready');
@@ -56,7 +58,8 @@ function UpdateFeedPage() {
         let pollRate: number | null = Number.parseInt(pollingRate);
         if(isNaN(pollRate)) pollRate = null;
 
-        const info = {name, url, auth_username: username, auth_password: password};
+        const info = {name, url, auth_username: username, auth_password: password, custom_code: customCode};
+        console.debug("Info mapped", info);
         const updatedFeed = {decrypt_in_database: decrypted, active, poll_rate: pollRate, security_level: security};
         const response = await generateUpdateCommands(workers, feed, info, updatedFeed);
         if(!response.ok) throw new Error(`Failed to generate add command: ${response.err}`);
@@ -75,7 +78,7 @@ function UpdateFeedPage() {
 
         // Go back to feeds
         navigate(`/dataviewer/private/feed/${feedId}`);
-    }, [workers, ready, data, feed, name, url, username, password, decrypted, active, pollingRate, security, navigate, mutate, feedId]);
+    }, [workers, ready, data, feed, name, url, username, password, decrypted, active, pollingRate, security, navigate, mutate, feedId, customCode]);
 
     return (
         <div className='fixed top-10 md:top-12 left-0 right-0 px-2 bottom-10 overflow-y-auto'>
@@ -91,8 +94,8 @@ function UpdateFeedPage() {
                         username={username} setUsername={setUsername}
                         password={password} setPassword={setPassword}
                         decrypted={decrypted} setDecrypted={setDecrypted}
-                        security={security} setSecurity={setSecurity} />
-
+                        security={security} setSecurity={setSecurity}
+                        customCode={customCode} setCustomCode={setCustomCode} />
                 </div>
 
                 <div className="w-full text-center">
@@ -116,7 +119,7 @@ export function FeedTypeList(props: {id?: string, className?: string, value: str
         <select id={props.id} className={props.className} value={props.value} onChange={props.onChange}>
             <option>Pick one</option>
             <option value="web.google_trends.news">Google Trends News</option>
-            <option value="millegrilles.senseurs_passifs">Senseurs Passifs</option>
+            <option value="web.scraper.python_custom">Web Scraper with Python</option>
         </select>
     );
 }
@@ -148,6 +151,8 @@ type FeedUpdateFieldsProps = {
     setDecrypted: (value: boolean) => void,
     security: string,
     setSecurity: (value: string) => void,
+    customCode: string,
+    setCustomCode: (value: string) => void,
 }
 
 export function FeedUpdateFields(props: FeedUpdateFieldsProps) {
@@ -183,6 +188,10 @@ export function FeedUpdateFields(props: FeedUpdateFieldsProps) {
                 <SwitchButton value={props.decrypted} onChange={props.setDecrypted} />
             </div>
 
+            <label htmlFor="custom-code" className='col-span-4'>Custom Code</label>
+            <textarea id="custom-code" rows={20} onChange={e=>props.setCustomCode(e.target.value)} value={props.customCode}
+                      className='col-span-4 text-white bg-indigo-900 border-2 border-indigo-400 p-2' />
+
             <label htmlFor="securitySelect">Share level</label>
             <SecurityLevelList id="securitySelect" value={props.security} onChange={e=>props.setSecurity(e.target.value)}
                                className='col-span-3 text-black w-full bg-slate-300 border-2 border-indigo-400'/>
@@ -210,10 +219,11 @@ async function generateUpdateCommands(
     }
 
     // Encrypt sensitive information
+    // console.debug("Encrypt paramsSecure: ", paramsSecure);
     const encryptedContent = await workers.encryption.encryptMessageMgs4ToBase64(paramsSecure, secretKey);
     encryptedContent.cle_id = keyId;
     delete encryptedContent.digest;  // Not useful in this context
-    console.debug("Updated encrypted content: %O", encryptedContent);
+    // console.debug("Updated encrypted content: %O", encryptedContent);
 
     // Send feed create commmand
     const updateFeedContent: UpdateFeedPayload = {
@@ -224,6 +234,6 @@ async function generateUpdateCommands(
         active,
         decrypt_in_database: decrypted,
     };
-    console.debug("Update feed command", updateFeedContent);
+    // console.debug("Update feed command", updateFeedContent);
     return await workers.connection.updateFeed(updateFeedContent);
 }

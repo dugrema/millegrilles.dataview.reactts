@@ -41,6 +41,7 @@ export type FeedInformation = {
     url?: string | null,
     auth_username?: string | null,
     auth_password?: string | null,
+    custom_code?: string | null,
 };
 
 export type GetFeedsResponseType = MessageResponse & {

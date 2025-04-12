@@ -12,6 +12,7 @@ export type DecryptedFeedType = {
     feed: FeedType,
     info: FeedInformation | null,
     secretKey: Uint8Array | null,
+    custom_code: string | null,
 }
 
 type FeedsListType = {
@@ -84,12 +85,12 @@ export async function decryptFeeds(decryptedKeys: DecryptedKey[], response: Mess
             console.warn("Unkown key for feed", feed.feed_id);
             continue;
         }
-        const {format, nonce, ciphertext_base64} = feed.encrypted_feed_information;
+        const {format, nonce, ciphertext_base64, compression} = feed.encrypted_feed_information;
         if (!format || !nonce) {
             console.warn("Unkown format/nonce for feed", feed.feed_id);
             continue;
         }
-        const cleartextBytes = await workers.encryption.decryptMessage(format, key, nonce, ciphertext_base64);
+        const cleartextBytes = await workers.encryption.decryptMessage(format, key, nonce, ciphertext_base64, compression);
         const cleartext = JSON.parse(new TextDecoder().decode(cleartextBytes));
         // console.debug("Cleartext", cleartext);
         mappedFeeds.push({feed, info: cleartext, secretKey: key});

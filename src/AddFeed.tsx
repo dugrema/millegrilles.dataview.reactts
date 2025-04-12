@@ -22,15 +22,17 @@ function AddFeedPage() {
     const [pollingRate, setPollingRate] = useState('');
     const [security, setSecurity] = useState("2.prive");
     const [feedType, setFeedType] = useState("");
+    const [customCode, setCustomCode] = useState("");
 
     const addCallback = useCallback(async () => {
         if(!workers || !ready) throw new Error('Connection not ready');
-        const response = await generateAddCommands(workers, {name, url, auth_username: username, auth_password: password},
+        const response = await generateAddCommands(workers,
+            {name, url, auth_username: username, auth_password: password, custom_code: customCode},
             {feedType, decrypted, active, pollingRate, security});
         if(!response.ok) throw new Error(`Failed to generate add command: ${response.err}`);
         // Go back to feeds
         navigate('/dataviewer/private');
-    }, [workers, ready, name, url, username, password, decrypted, active, pollingRate, security, feedType, navigate]);
+    }, [workers, ready, name, url, username, password, decrypted, active, pollingRate, security, feedType, navigate, customCode]);
 
     return (
         <div className='fixed top-10 md:top-12 left-0 right-0 px-2 bottom-10 overflow-y-auto'>
@@ -50,7 +52,8 @@ function AddFeedPage() {
                         username={username} setUsername={setUsername}
                         password={password} setPassword={setPassword}
                         decrypted={decrypted} setDecrypted={setDecrypted}
-                        security={security} setSecurity={setSecurity} />
+                        security={security} setSecurity={setSecurity}
+                        customCode={customCode} setCustomCode={setCustomCode} />
 
                 </div>
 

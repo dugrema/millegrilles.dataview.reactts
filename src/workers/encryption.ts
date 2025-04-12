@@ -1,6 +1,6 @@
 // import '@solana/webcrypto-ed25519-polyfill';
 import axios, {AxiosError} from 'axios';
-import { gzip, inflate } from 'pako';
+import { gzip, ungzip, inflate  } from 'pako';
 import {
     encryption,
     encryptionMgs4,
@@ -219,7 +219,9 @@ export class AppsEncryptionWorker {
 
         let completeBuffer = encryption.concatBuffers(buffers)
 
-        if(compression === 'gz' || compression === 'deflate') {
+        if(compression === 'gz') {
+            completeBuffer = ungzip(completeBuffer);
+        } else if(compression === 'deflate') {
             completeBuffer = inflate(completeBuffer);
         } else if(compression) {
             throw new Error('Unsupported compression format: ' + compression);
