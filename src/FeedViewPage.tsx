@@ -1,11 +1,13 @@
 import {Link, useParams} from "react-router-dom";
-import {useMemo} from "react";
+import {useCallback, useMemo} from "react";
 import {DecryptedFeedViewType, useGetFeedViews} from "./GetFeedViews.ts";
+import ActionButton from "./ActionButton.tsx";
+import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 
 
 function FeedViewPage() {
     const {feedId} = useParams();
-    // const {userId, ready, workers} = useWorkers();
+    const {ready, workers} = useWorkers();
 
     const {data, error} = useGetFeedViews({feedId});
 
@@ -15,6 +17,15 @@ function FeedViewPage() {
         if(!name) name = 'Private feed';
         return [name, feedView];
     }, [data])
+
+    const processFeedHandler = useCallback(async ()=>{
+        if(!workers || !ready) throw new Error('workers not initialized');
+        console.debug("Start processing the feed");
+        const feedViewId = feedView.info?.feed_view_id;
+        if(!feedViewId) throw new Error("Missing feed_view_id")
+        const response = await workers.connection.runFeedViewProcess(feedViewId);
+        if(response.ok !== true) throw new Error("Error starting view process: " + response.err);
+    }, [workers, ready, feedView]);
 
     if(error) return (
         <section className='fixed top-10 md:top-12 left-0 right-0 px-2'>
@@ -34,10 +45,13 @@ function FeedViewPage() {
                   className="btn inline-block text-center text-indigo-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
                 Back
             </Link>
-            <Link to={`/dataviewer/private/feed/${feedId}/${feedView.info?.feed_view_id}/update`}
+            <Link to={`/dataviewer/private/feed/${feedId}/${feedView?.info?.feed_view_id}/update`}
                   className="btn inline-block text-center text-indigo-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
                 Edit
             </Link>
+            <ActionButton onClick={processFeedHandler} disabled={!ready} mainButton={true} revertSuccessTimeout={3}>
+                Run
+            </ActionButton>
         </section>
     )
 }

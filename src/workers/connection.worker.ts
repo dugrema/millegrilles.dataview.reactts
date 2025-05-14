@@ -161,6 +161,11 @@ export class AppsConnectionWorker extends ConnectionWorker {
         return await this.connection.sendRequest({}, DOMAINE_CORETOPOLOGIE, 'getFilehosts') as GetFilehostsResponse;
     }
 
+    async runFeedViewProcess(feedViewId: string) {
+        if(!this.connection) throw new Error("Connection is not initialized");
+        return await this.connection.sendCommand({feed_view_id: feedViewId}, DOMAIN_DATA_COLLECTOR_NAME, 'processView') as MessageResponse;
+    }
+
     async getCertificate() {
         if(!this.connection) throw new Error("Connection is not initialized");
         return this.connection.getMessageFactoryCertificate();
