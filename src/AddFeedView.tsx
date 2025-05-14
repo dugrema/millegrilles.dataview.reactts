@@ -1,14 +1,18 @@
-import {Link, useParams} from "react-router-dom";
+import {messageStruct} from "millegrilles.cryptography";
+
+import {Link, useNavigate, useParams} from "react-router-dom";
 import {useGetData} from "./GetData.ts";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 import ActionButton from "./ActionButton.tsx";
 import SwitchButton from "./SwitchButton.tsx";
+import {FeedViewUpdateType} from "./workers/connection.worker.ts";
 
 function AddFeedView() {
 
     const {feedId} = useParams();
     const {userId, ready, workers} = useWorkers();
+    const navigate = useNavigate();
 
     const {data, error} = useGetData({feedId, skip: 0, limit: 0, start_date: null, end_date: null});
     const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -26,11 +30,38 @@ function AddFeedView() {
     }, [data])
 
     const addCallback = useCallback(async () => {
-        if(!workers && !ready) throw new Error("Workers not initialized");
+        if(!workers || !ready) throw new Error("Workers not initialized");
         console.debug("Save view configuration: ", viewConfiguration);
         if(!viewConfiguration.name) throw new Error('Missing name');
-        throw new Error('todo');
-    }, [workers, ready, viewConfiguration]);
+
+        // Generate new key and keymaster command
+        const key = await workers.encryption.generateSecretKey(['DataCollector']);
+        const encryptedKey = await workers.encryption.encryptSecretKey(key.secret);
+        const keymasterCommand = await workers.connection.createRoutedMessage(
+            messageStruct.MessageKind.Command,
+            {signature: key.signature, cles: encryptedKey},
+            {domaine: 'MaitreDesCles', action: 'ajouterCleDomaines'},
+        );
+
+        const paramsSecure = {name: viewConfiguration.name};
+        const encryptedContent = await workers.encryption.encryptMessageMgs4ToBase64(paramsSecure, key.secret);
+        encryptedContent.cle_id = key.cle_id;
+        console.debug("New Key: %O\nEncrypted key command: %O\nEncrypted content: %O", key, keymasterCommand, encryptedContent);
+        delete encryptedContent.digest;  // Not useful in this context
+
+        const viewConfigurationData = {
+            ...viewConfiguration,
+            feed_id: feedId,
+            encrypted_data: encryptedContent,
+            // Remove decrypted fields
+            name: undefined,
+        } as FeedViewUpdateType;
+        const response = await workers.connection.createFeedView(viewConfigurationData, keymasterCommand);
+        if(response.ok !== true) throw new Error('Error creating feed view: ' + response.err);
+
+        // Go back to list
+        navigate(`/dataviewer/private/feed/${feedId}`);
+    }, [workers, ready, navigate, feedId, viewConfiguration]);
 
     useEffect(()=> {
         if(!workers || !ready) return;
@@ -90,11 +121,8 @@ type ViewUpdateFieldsProps = {
     onChange: (value: FeedViewType)=>void
 };
 
-export type FeedViewType = {
+export type FeedViewType = FeedViewUpdateType & {
     name: string,
-    active: boolean;
-    decrypted: boolean,
-    mappingCode: string,
 }
 
 export function ConfigureView(props: ViewUpdateFieldsProps) {
@@ -107,7 +135,7 @@ export function ConfigureView(props: ViewUpdateFieldsProps) {
     const [decrypted, setDecrypted] = useState(false);
 
     useEffect(()=>{
-        onChange({name, mappingCode, active, decrypted})
+        onChange({name, mapping_code: mappingCode, active, decrypted})
     }, [onChange, name, mappingCode, active, decrypted]);
 
     return (
