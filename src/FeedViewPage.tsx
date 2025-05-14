@@ -34,6 +34,10 @@ function FeedViewPage() {
                   className="btn inline-block text-center text-indigo-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
                 Back
             </Link>
+            <Link to={`/dataviewer/private/feed/${feedId}/${feedView.info?.feed_view_id}/update`}
+                  className="btn inline-block text-center text-indigo-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
+                Edit
+            </Link>
         </section>
     )
 }

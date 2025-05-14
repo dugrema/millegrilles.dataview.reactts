@@ -126,6 +126,11 @@ export class AppsConnectionWorker extends ConnectionWorker {
         return await this.connection.sendCommand(feedView, DOMAIN_DATA_COLLECTOR_NAME, 'createFeedView', {attachments: {key: keyCommand}});
     }
 
+    async updateFeedView(feedView: FeedViewUpdateType): Promise<MessageResponse> {
+        if(!this.connection) throw new Error("Connection is not initialized");
+        return await this.connection.sendCommand(feedView, DOMAIN_DATA_COLLECTOR_NAME, 'updateFeedView');
+    }
+
     async getFeedViews(feedId: string, feedViewId?: string | null) {
         if(!this.connection) throw new Error("Connection is not initialized");
         return await this.connection.sendRequest({feed_id: feedId, feed_view_id: feedViewId}, DOMAIN_DATA_COLLECTOR_NAME, 'getFeedViews') as Promise<GetFeedViewsResponseType>;

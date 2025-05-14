@@ -7,6 +7,7 @@ import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 import ActionButton from "./ActionButton.tsx";
 import SwitchButton from "./SwitchButton.tsx";
 import {FeedViewUpdateType} from "./workers/connection.worker.ts";
+import {DecryptedFeedViewType} from "./GetFeedViews.ts";
 
 function AddFeedView() {
 
@@ -99,7 +100,7 @@ function AddFeedView() {
         <section className='fixed top-10 md:top-12 left-0 right-0 px-2'>
             <h1 className="text-indigo-300 text-xl font-bold pb-2">{feedName}: Add feed view</h1>
 
-            <ConfigureView onChange={setViewConfiguration} />
+            <ConfigureView onChange={setViewConfiguration}/>
 
             <div className="w-full text-center pt-6">
                 <ActionButton onClick={addCallback} mainButton={true} disabled={!ready}>
@@ -118,7 +119,8 @@ function AddFeedView() {
 export default AddFeedView;
 
 type ViewUpdateFieldsProps = {
-    onChange: (value: FeedViewType)=>void
+    onChange: (value: FeedViewType)=>void,
+    init?: DecryptedFeedViewType | null,
 };
 
 export type FeedViewType = FeedViewUpdateType & {
@@ -127,7 +129,7 @@ export type FeedViewType = FeedViewUpdateType & {
 
 export function ConfigureView(props: ViewUpdateFieldsProps) {
 
-    const {onChange} = props;
+    const {onChange, init} = props;
 
     const [name, setName] = useState('');
     const [mappingCode, setMappingCode] = useState('');
@@ -137,6 +139,19 @@ export function ConfigureView(props: ViewUpdateFieldsProps) {
     useEffect(()=>{
         onChange({name, mapping_code: mappingCode, active, decrypted})
     }, [onChange, name, mappingCode, active, decrypted]);
+
+    const [loaded, setLoaded] = useState(false);  // Latch
+    useEffect(()=>{
+        if(loaded || !init) return;
+        setLoaded(true);
+        console.debug("Load initial values", init);
+        const info = init.info;
+        if(!info) return;
+        setName(info.name || '');
+        setMappingCode(info.mapping_code || '');
+        setActive(info.active);
+        setDecrypted(info.decrypted);
+    }, [init, loaded, setLoaded,setName, setMappingCode, setActive, setDecrypted]);
 
     return (
         <>

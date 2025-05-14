@@ -17,8 +17,8 @@ function createPrivateReactBrowserChildren() {
         { path: "feed/:feedId", element: <FeedPage /> },
         { path: "feed/:feedId/update", element: <UpdateFeed /> },
         { path: "feed/:feedId/addView", element: <AddFeedView /> },
-        { path: "feed/:feedId/:viewId", element: <FeedViewPage /> },
-        { path: "feed/:feedId/:viewId/updateView", element: <UpdateFeedView /> },
+        { path: "feed/:feedId/:feedViewId", element: <FeedViewPage /> },
+        { path: "feed/:feedId/:feedViewId/update", element: <UpdateFeedView /> },
     ];
 }
 

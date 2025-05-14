@@ -1,16 +1,18 @@
-import {Link, useParams} from "react-router-dom";
+import {Link, useNavigate, useParams} from "react-router-dom";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
-import {useGetData} from "./GetData.ts";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import ActionButton from "./ActionButton.tsx";
 import {ConfigureView, FeedViewType} from "./AddFeedView.tsx";
+import {useGetFeedViews} from "./GetFeedViews.ts";
+import {FeedViewUpdateType} from "./workers/connection.worker.ts";
 
 function UpdateFeedView() {
 
-    const {feedId} = useParams();
+    const {feedId, feedViewId} = useParams();
     const {userId, ready, workers} = useWorkers();
+    const navigate = useNavigate();
 
-    const {data, error} = useGetData({feedId, skip: 0, limit: 0, start_date: null, end_date: null});
+    const {data, error} = useGetFeedViews({feedId, feedViewId});
     const [isAdmin, setIsAdmin] = useState<boolean>(false);
     const [viewConfiguration, setViewConfiguration] = useState({} as FeedViewType);
 
@@ -19,18 +21,42 @@ function UpdateFeedView() {
         return data.feed.feed.user_id === userId;
     }, [userId, data, isAdmin]);
 
-    const feedName = useMemo(()=>{
-        const name = data?.feed?.info?.name;
-        if(!name) return 'Private Feed';
-        return name;
+    const [feedName, feedView] = useMemo(()=>{
+        let name = data?.feed?.info?.name;
+        const feedView = data?.views[0];
+        if(!name) name = 'Private Feed';
+        return [name, feedView];
     }, [data])
 
-    const addCallback = useCallback(async () => {
-        if(!workers && !ready) throw new Error("Workers not initialized");
+    const updateCallback = useCallback(async () => {
+        if(!workers || !ready) throw new Error("Workers not initialized");
+        if(!feedView) throw new Error("No feed view to update");
         console.debug("Save view configuration: ", viewConfiguration);
         if(!viewConfiguration.name) throw new Error('Missing name');
-        throw new Error('todo');
-    }, [workers, ready, viewConfiguration]);
+        const keyId = feedView.info?.encrypted_data?.cle_id;
+        const encryptionKey = feedView.secretKey;
+        if(!keyId || !encryptionKey) throw new Error("Error accessing keyId or encryptionKey");
+
+        const paramsSecure = {name: viewConfiguration.name};
+        const encryptedContent = await workers.encryption.encryptMessageMgs4ToBase64(paramsSecure, encryptionKey);
+        encryptedContent.cle_id = keyId;
+        console.debug("Encrypted content: %O", encryptedContent);
+        delete encryptedContent.digest;  // Not useful in this context
+
+        const viewConfigurationData = {
+            ...viewConfiguration,
+            feed_id: feedId,
+            feed_view_id: feedViewId,
+            encrypted_data: encryptedContent,
+            // Remove decrypted fields
+            name: undefined,
+        } as FeedViewUpdateType;
+        const response = await workers.connection.updateFeedView(viewConfigurationData);
+        if(response.ok !== true) throw new Error('Error updating feed view: ' + response.err);
+
+        // Go back to list
+        navigate(`/dataviewer/private/feed/${feedId}/${feedViewId}`);
+    }, [workers, ready, navigate, viewConfiguration, feedView, feedId, feedViewId]);
 
     useEffect(()=> {
         if(!workers || !ready) return;
@@ -46,7 +72,7 @@ function UpdateFeedView() {
         <section className='fixed top-10 md:top-12 left-0 right-0 px-2'>
             <h1 className="text-indigo-300 text-xl font-bold pb-2">{feedName}: Add feed view</h1>
             <p>Error loading information</p>
-            <Link to={`/dataviewer/private/feed/${feedId}`}
+            <Link to={`/dataviewer/private/feed/${feedId}/${feedViewId}`}
                   className="btn inline-block text-center text-slate-300 text bg-indigo-600 active:text-slate-800 hover:bg-indigo-800 active:bg-indigo-700">
                 Back
             </Link>
@@ -57,7 +83,7 @@ function UpdateFeedView() {
         <section className='fixed top-10 md:top-12 left-0 right-0 px-2'>
             <h1 className="text-indigo-300 text-xl font-bold pb-2">{feedName}: Add feed view</h1>
             <p>You do not have permissions to edit this feed.</p>
-            <Link to={`/dataviewer/private/feed/${feedId}`}
+            <Link to={`/dataviewer/private/feed/${feedId}/${feedViewId}`}
                   className="btn inline-block text-center text-slate-300 text bg-indigo-600 active:text-slate-800 hover:bg-indigo-800 active:bg-indigo-700">
                 Back
             </Link>
@@ -68,13 +94,13 @@ function UpdateFeedView() {
         <section className='fixed top-10 md:top-12 left-0 right-0 px-2'>
             <h1 className="text-indigo-300 text-xl font-bold pb-2">{feedName}: Add feed view</h1>
 
-            <ConfigureView onChange={setViewConfiguration} />
+            <ConfigureView onChange={setViewConfiguration} init={data?.views[0]} />
 
             <div className="w-full text-center pt-6">
-                <ActionButton onClick={addCallback} mainButton={true} disabled={!ready}>
+                <ActionButton onClick={updateCallback} mainButton={true} disabled={!ready}>
                     Save
                 </ActionButton>
-                <Link to={`/dataviewer/private/feed/${feedId}`}
+                <Link to={`/dataviewer/private/feed/${feedId}/${feedViewId}`}
                       className="btn inline-block text-center text-indigo-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
                     Cancel
                 </Link>

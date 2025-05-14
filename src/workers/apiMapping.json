@@ -14,6 +14,7 @@
     {"domain": "DataCollector", "action": "createFeed"},
     {"domain": "DataCollector", "action": "updateFeed"},
     {"domain": "DataCollector", "action": "deleteFeed"},
-    {"domain": "DataCollector", "action": "createFeedView"}
+    {"domain": "DataCollector", "action": "createFeedView"},
+    {"domain": "DataCollector", "action": "updateFeedView"}
   ]
 }
