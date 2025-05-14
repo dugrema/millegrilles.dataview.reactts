@@ -8,6 +8,7 @@ import {Formatters} from "millegrilles.reactdeps.typescript";
 import ThumbnailFuuid from "./ThumbnailFuuid.tsx";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 import {PageSelectors} from "./BrowsingElements.tsx";
+import {DecryptedFeedViewType, FeedViewsListType, useGetFeedViews} from "./GetFeedViews.ts";
 
 const PAGE_SIZE = 35;
 
@@ -26,6 +27,7 @@ function FeedPage() {
     }, [page]);
 
     const {data, error} = useGetData({feedId, skip, limit: PAGE_SIZE, start_date: startDate, end_date: endDate});
+    const {data: feedViewsData, error: feedViewsError} = useGetFeedViews({feedId});
 
     useEffect(()=>{
         if(error) {
@@ -98,7 +100,7 @@ function FeedPage() {
 
             <section className="w-full fixed top-32 bottom-10 px-2 overflow-y-auto">
                 {/* New data style */}
-                <ViewList />
+                <ViewList value={feedViewsData} error={feedViewsError} />
 
                 { /* Old data style */ }
                 <DateSelectors startDate={startDate} endDate={endDate} setStartDate={setStartDate} setEndDate={setEndDate}/>
@@ -299,10 +301,43 @@ function DateSelectors(props: DateSelectorProps) {
     )
 }
 
-function ViewList() {
+type ViewListProps = {
+    value: FeedViewsListType | null | undefined,
+    error: unknown
+}
+
+function ViewList(props: ViewListProps) {
+
+    const {value, error} = props;
+
+    if(error) return (
+        <p>Error: {''+error}</p>
+    )
+
+    if(!value || value.views.length === 0) return <></>;
+
     return (
         <>
             <p>Views</p>
+            {value.views.map(item=>{
+                return <ViewFeedItem key={item.info?.feed_view_id} value={item} />
+            })}
+        </>
+    )
+}
+
+function ViewFeedItem(props: {value: DecryptedFeedViewType}) {
+    const {feedId} = useParams();
+
+    const {value} = props;
+
+    console.debug("value ", value);
+
+    return (
+        <>
+            <Link to={`/dataviewer/private/feed/${feedId}/${value.info?.feed_view_id}`}>
+                {props.value.info?.name}
+            </Link>
         </>
     )
 }

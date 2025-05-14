@@ -49,8 +49,15 @@ export type GetFeedsResponseType = MessageResponse & {
     keys: messageStruct.MilleGrillesMessage,
 };
 
+export type GetFeedViewsResponseType = MessageResponse & {
+    feed: FeedType,
+    views: FeedViewUpdateType[],
+    keys: messageStruct.MilleGrillesMessage,
+}
+
 export type FeedViewUpdateType = {
     feed_id?: string,
+    feed_view_id?: string | null,
     encrypted_data?: encryption.EncryptedData,
     active: boolean;
     decrypted: boolean,
@@ -117,6 +124,11 @@ export class AppsConnectionWorker extends ConnectionWorker {
     async createFeedView(feedView: FeedViewUpdateType, keyCommand: messageStruct.MilleGrillesMessage): Promise<MessageResponse> {
         if(!this.connection) throw new Error("Connection is not initialized");
         return await this.connection.sendCommand(feedView, DOMAIN_DATA_COLLECTOR_NAME, 'createFeedView', {attachments: {key: keyCommand}});
+    }
+
+    async getFeedViews(feedId: string, feedViewId?: string | null) {
+        if(!this.connection) throw new Error("Connection is not initialized");
+        return await this.connection.sendRequest({feed_id: feedId, feed_view_id: feedViewId}, DOMAIN_DATA_COLLECTOR_NAME, 'getFeedViews') as Promise<GetFeedViewsResponseType>;
     }
 
     async getDataItems(feedId: string, skip?: number | null, limit?: number | null, start_date?: Date | null, end_date?: Date | null) {
