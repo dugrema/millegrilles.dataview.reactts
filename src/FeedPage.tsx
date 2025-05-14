@@ -11,7 +11,7 @@ import {PageSelectors} from "./BrowsingElements.tsx";
 
 const PAGE_SIZE = 35;
 
-function ViewFeed() {
+function FeedPage() {
 
     const {feedId} = useParams();
     const {userId, ready, workers} = useWorkers();
@@ -83,14 +83,24 @@ function ViewFeed() {
                 </Link>
 
                 {isEditable?
-                    <Link to={`/dataviewer/private/feed/${feedId}/update`}
-                          className="btn inline-block text-center text-slate-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
-                        Edit
-                    </Link>
+                    <>
+                        <Link to={`/dataviewer/private/feed/${feedId}/update`}
+                              className="btn inline-block text-center text-slate-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
+                            Edit
+                        </Link>
+                        <Link to={`/dataviewer/private/feed/${feedId}/addView`}
+                              className="btn inline-block text-center text-slate-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
+                            Add View
+                        </Link>
+                    </>
                 :<></>}
             </section>
 
             <section className="w-full fixed top-32 bottom-10 px-2 overflow-y-auto">
+                {/* New data style */}
+                <ViewList />
+
+                { /* Old data style */ }
                 <DateSelectors startDate={startDate} endDate={endDate} setStartDate={setStartDate} setEndDate={setEndDate}/>
                 <PageSelectors page={page} setPage={setPage} pageCount={pageCount} />
                 <ViewFeedElem value={data} />
@@ -104,7 +114,7 @@ function ViewFeedUnknown() {
     return <div>Unknown feed type</div>;
 }
 
-export default ViewFeed;
+export default FeedPage;
 
 type GoogleTrendsItem = {
     title: string,
@@ -286,5 +296,13 @@ function DateSelectors(props: DateSelectorProps) {
                 </button>
             </div>
         </div>
+    )
+}
+
+function ViewList() {
+    return (
+        <>
+            <p>Views</p>
+        </>
     )
 }
