@@ -49,7 +49,7 @@ function ActionButton(props: ActionButtonProps) {
             <IconCheckSvg className='w-6 fill-green-500 inline'/>
         ];
         if(mainButton) return [
-            `${btnClass} inline-block text-center bg-indigo-800 hover:bg-indigo-600 active:bg-indigo-500 disabled:bg-slate-900`,
+            `${btnClass} inline-block text-center text-slate-300 text bg-indigo-600 active:text-slate-800 hover:bg-indigo-800 active:bg-indigo-700`,
             waiting?<IconCompactDiscSvg className='w-6 fill-slate-500 inline animate-spin' />:null
         ];
         return [
