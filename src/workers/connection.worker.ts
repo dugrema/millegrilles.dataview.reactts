@@ -151,7 +151,9 @@ export class AppsConnectionWorker extends ConnectionWorker {
 
     async getFeedViews(feedId: string, feedViewId?: string | null) {
         if(!this.connection) throw new Error("Connection is not initialized");
-        return await this.connection.sendRequest({feed_id: feedId, feed_view_id: feedViewId}, DOMAIN_DATA_COLLECTOR_NAME, 'getFeedViews') as Promise<GetFeedViewsResponseType>;
+        let feed_view_ids = null as string[] | null;
+        if(feedViewId) feed_view_ids = [feedViewId];
+        return await this.connection.sendRequest({feed_id: feedId, feed_view_ids}, DOMAIN_DATA_COLLECTOR_NAME, 'getFeedViews') as Promise<GetFeedViewsResponseType>;
     }
 
     async getFeedViewDataItems(feedViewId?: string | null, skip?: number | null, limit?: number | null) {
