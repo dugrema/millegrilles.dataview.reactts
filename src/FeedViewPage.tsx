@@ -86,6 +86,9 @@ export default FeedViewPage;
 
 type GoogleTrendsGroup = {label: string, pub_date: number, approx_traffic: string};
 
+let viewMode = 'line';
+viewMode = 'large';
+
 function ViewFeedGoogleTrendsNews(props: {value: FeedViewDataType | null}) {
     const {value} = props
 
@@ -122,7 +125,7 @@ function ViewFeedGoogleTrendsNews(props: {value: FeedViewDataType | null}) {
             const firstGElem = groupElems[0].data;
             const groupInfo = firstGElem?.group as GoogleTrendsGroup;
             elems.push(
-                <div key={groupKey} className="grid grid-cols-3 md:grid-cols-6 bg-indigo-800/50 p-2 font-bold">
+                <div key={groupKey} className="col-span-1 md:col-span-3 lg:col-span-6 grid grid-cols-3 md:grid-cols-6 bg-indigo-800/50 p-2 font-bold">
                     <p className='col-span-3'>{groupInfo?.label}</p>
                     <p>({groupInfo?.approx_traffic})</p>
                     <p className='col-span-2 md:col-span-1 text-right'>
@@ -136,54 +139,122 @@ function ViewFeedGoogleTrendsNews(props: {value: FeedViewDataType | null}) {
             )
 
             for(const elem of groupElems) {
-                let thumbnail: AttachedFile | null = null;
-                let thumbnailDecryptionKey: Uint8Array | null = null;
-                if(elem.info.files && elem.info.files.length > 0) {
-                    // First item is the thumbnail file
-                    thumbnail = elem.info.files[0];
-                    const keyId = thumbnail.decryption.cle_id;
-                    if(keyId) {
-                        thumbnailDecryptionKey = value.keys[keyId];
-                    }
+                if(viewMode == 'line') {
+                    elems.push(<FeedViewDataItemLine value={elem} feed={value}/>);
+                } else if(viewMode == 'large') {
+                    elems.push(<FeedViewDataItemLarge value={elem} feed={value}/>);
                 }
-                let url = '#';
-                let newsDomain = '';
-                if(elem.data?.url) {
-                    url = elem.data.url;
-                    try {
-                        newsDomain = new URL(url).hostname;
-                        if(newsDomain.startsWith('www.')) {
-                            newsDomain = newsDomain.slice(4);
-                        }
-                    } catch (err) {
-                        // Error reading url
-                        console.error(`Error reading url ${url}: ${err}`);
-                    }
-                }
-
-                elems.push(
-                    <a key={elem.info.data_id} href={url} target='_blank' className="grid grid-cols-6 space-x-4">
-                        {thumbnail?
-                            <ThumbnailFuuidV2 value={thumbnail} secretKey={thumbnailDecryptionKey} className='object-cover pr-2 col-span-6 sm:col-span-3 md:col-span-2' />
-                            :
-                            <div></div>
-                        }
-                        <p className="col-span-6 sm:col-span-3 md:col-span-4">
-                            {elem.data?.label}
-                            {newsDomain?<span className="block text-xs">{newsDomain}</span>:<></>}
-                        </p>
-
-                    </a>
-                );
             }
         }
 
         return elems;
     }, [value]);
 
+    if(viewMode === 'large') {
+        return (
+            <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 space-x-1 space-y-4'>
+                {dataElems}
+            </div>
+        )
+    }
+
     return (
         <div className='space-y-4'>
             {dataElems}
+        </div>
+    )
+
+}
+
+type FeedViewDataItemLargeProps = {
+    value: DecryptedFeedViewDataItem,
+    feed: FeedViewDataType,
+}
+
+function FeedViewDataItemLine(props: FeedViewDataItemLargeProps) {
+    const {value, feed} = props;
+
+    let thumbnail: AttachedFile | null = null;
+    let thumbnailDecryptionKey: Uint8Array | null = null;
+    if(value.info.files && value.info.files.length > 0) {
+        // First item is the thumbnail file
+        thumbnail = value.info.files[0];
+        const keyId = thumbnail.decryption.cle_id;
+        if(keyId) {
+            thumbnailDecryptionKey = feed.keys[keyId];
+        }
+    }
+    let url = '#';
+    let newsDomain = '';
+    if(value.data?.url) {
+        url = value.data.url;
+        try {
+            newsDomain = new URL(url).hostname;
+            if(newsDomain.startsWith('www.')) {
+                newsDomain = newsDomain.slice(4);
+            }
+        } catch (err) {
+            // Error reading url
+            console.error(`Error reading url ${url}: ${err}`);
+        }
+    }
+
+    return (
+        <a key={value.info.data_id} href={url} target='_blank' className="grid grid-cols-6 space-x-4">
+            {thumbnail?
+                <ThumbnailFuuidV2 value={thumbnail} secretKey={thumbnailDecryptionKey} className='object-cover pr-2 col-span-6 sm:col-span-3 md:col-span-2' />
+                :
+                <div></div>
+            }
+            <p className="col-span-6 sm:col-span-3 md:col-span-4">
+                {value.data?.label}
+                {newsDomain?<span className="block text-xs">{newsDomain}</span>:<></>}
+            </p>
+        </a>
+    )
+}
+
+function FeedViewDataItemLarge(props: FeedViewDataItemLargeProps) {
+    const {value, feed} = props;
+
+    let thumbnail: AttachedFile | null = null;
+    let thumbnailDecryptionKey: Uint8Array | null = null;
+    if(value.info.files && value.info.files.length > 0) {
+        // First item is the thumbnail file
+        thumbnail = value.info.files[0];
+        const keyId = thumbnail.decryption.cle_id;
+        if(keyId) {
+            thumbnailDecryptionKey = feed.keys[keyId];
+        }
+    }
+    let url = '#';
+    let newsDomain = '';
+    if(value.data?.url) {
+        url = value.data.url;
+        try {
+            newsDomain = new URL(url).hostname;
+            if(newsDomain.startsWith('www.')) {
+                newsDomain = newsDomain.slice(4);
+            }
+        } catch (err) {
+            // Error reading url
+            console.error(`Error reading url ${url}: ${err}`);
+        }
+    }
+
+    return (
+        <div className=''>
+            <a key={value.info.data_id} href={url} target='_blank'>
+                {thumbnail?
+                    <ThumbnailFuuidV2 value={thumbnail} secretKey={thumbnailDecryptionKey} className='object-cover pr-2 col-span-6 sm:col-span-3 md:col-span-2' />
+                    :
+                    <div></div>
+                }
+                <p className="col-span-6 sm:col-span-3 md:col-span-4">
+                    {value.data?.label}
+                    {newsDomain?<span className="block text-xs">{newsDomain}</span>:<></>}
+                </p>
+            </a>
         </div>
     )
 }
