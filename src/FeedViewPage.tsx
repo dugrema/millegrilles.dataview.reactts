@@ -125,7 +125,7 @@ function ViewFeedGoogleTrendsNews(props: {value: FeedViewDataType | null}) {
             const firstGElem = groupElems[0].data;
             const groupInfo = firstGElem?.group as GoogleTrendsGroup;
             elems.push(
-                <div key={groupKey} className="col-span-1 md:col-span-3 lg:col-span-6 grid grid-cols-3 md:grid-cols-6 bg-indigo-800/50 p-2 font-bold">
+                <div key={groupKey} className="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-6 grid grid-cols-3 md:grid-cols-6 bg-indigo-800/50 p-2 font-bold">
                     <p className='col-span-3'>{groupInfo?.label}</p>
                     <p>({groupInfo?.approx_traffic})</p>
                     <p className='col-span-2 md:col-span-1 text-right'>
@@ -152,7 +152,7 @@ function ViewFeedGoogleTrendsNews(props: {value: FeedViewDataType | null}) {
 
     if(viewMode === 'large') {
         return (
-            <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 space-x-1 space-y-4'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 space-x-1 space-y-4'>
                 {dataElems}
             </div>
         )
@@ -250,7 +250,7 @@ function FeedViewDataItemLarge(props: FeedViewDataItemLargeProps) {
                     :
                     <div></div>
                 }
-                <p className="col-span-6 sm:col-span-3 md:col-span-4">
+                <p className="">
                     {value.data?.label}
                     {newsDomain?<span className="block text-xs">{newsDomain}</span>:<></>}
                 </p>
