@@ -5,6 +5,8 @@ import ActionButton from "./ActionButton.tsx";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 import {DecryptedFeedViewDataItem, FeedViewDataType, useGetFeedViewData} from "./GetFeedViewData.ts";
 import {Formatters} from "millegrilles.reactdeps.typescript";
+import {AttachedFile} from "./workers/connection.worker.ts";
+import ThumbnailFuuidV2 from "./ThumbnailFuuidV2.tsx";
 
 
 function FeedViewPage() {
@@ -75,6 +77,8 @@ export default FeedViewPage;
 //     group?: {title?: string, pub_date?: number, approx_traffic?: string}
 // }
 
+type GoogleTrendsGroup = {label: string, pub_date: number, approx_traffic: string};
+
 function ViewFeedGoogleTrendsNews(props: {value: FeedViewDataType | null}) {
     const {value} = props
 
@@ -109,14 +113,14 @@ function ViewFeedGoogleTrendsNews(props: {value: FeedViewDataType | null}) {
         for(const groupKey of groupOrder) {
             const groupElems = groups[groupKey];
             const firstGElem = groupElems[0].data;
-            // const groupInfo = firstGElem?.group;
+            const groupInfo = firstGElem?.group as GoogleTrendsGroup;
             elems.push(
                 <div key={groupKey} className="grid grid-cols-3 md:grid-cols-6 bg-indigo-800/50 p-2 font-bold">
-                    <p className='col-span-3'>{firstGElem?.label}</p>
-                    {/*<p>({groupInfo?.approx_traffic})</p>*/}
+                    <p className='col-span-3'>{groupInfo?.label}</p>
+                    <p>({groupInfo?.approx_traffic})</p>
                     <p className='col-span-2 md:col-span-1 text-right'>
-                        {firstGElem?.pub_date?
-                            <Formatters.FormatterDate value={firstGElem.pub_date} />
+                        {groupInfo?.pub_date?
+                            <Formatters.FormatterDate value={groupInfo.pub_date} />
                             :
                             <></>
                         }
@@ -125,12 +129,16 @@ function ViewFeedGoogleTrendsNews(props: {value: FeedViewDataType | null}) {
             )
 
             for(const elem of groupElems) {
-                // const gelem = elem.data;
-                // let thumbnail: AttachedFile | null = null;
-                // if(elem.info.files && elem.info.files.length > 0) {
-                //     // First item is the thumbnail file
-                //     thumbnail = elem.info.files[0];
-                // }
+                let thumbnail: AttachedFile | null = null;
+                let thumbnailDecryptionKey: Uint8Array | null = null;
+                if(elem.info.files && elem.info.files.length > 0) {
+                    // First item is the thumbnail file
+                    thumbnail = elem.info.files[0];
+                    const keyId = thumbnail.decryption.cle_id;
+                    if(keyId) {
+                        thumbnailDecryptionKey = value.keys[keyId];
+                    }
+                }
                 let url = '#';
                 let newsDomain = '';
                 if(elem.data?.url) {
@@ -148,11 +156,11 @@ function ViewFeedGoogleTrendsNews(props: {value: FeedViewDataType | null}) {
 
                 elems.push(
                     <a key={elem.info.data_id} href={url} target='_blank' className="grid grid-cols-6 space-x-4">
-                        {/*{thumbnail?*/}
-                        {/*    <ThumbnailFuuid value={thumbnail} data={elem} className='object-cover pr-2 col-span-6 sm:col-span-3 md:col-span-2' />*/}
-                        {/*    :*/}
-                        {/*    <div></div>*/}
-                        {/*}*/}
+                        {thumbnail?
+                            <ThumbnailFuuidV2 value={thumbnail} secretKey={thumbnailDecryptionKey} className='object-cover pr-2 col-span-6 sm:col-span-3 md:col-span-2' />
+                            :
+                            <div></div>
+                        }
                         <p className="col-span-6 sm:col-span-3 md:col-span-4">
                             {elem.data?.label}
                             {newsDomain?<span className="block text-xs">{newsDomain}</span>:<></>}
