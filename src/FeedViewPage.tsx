@@ -1,5 +1,5 @@
 import {Link, useParams} from "react-router-dom";
-import {useCallback, useMemo} from "react";
+import {useCallback, useMemo, useState} from "react";
 import {DecryptedFeedViewType} from "./GetFeedViews.ts";
 import ActionButton from "./ActionButton.tsx";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
@@ -7,19 +7,32 @@ import {DecryptedFeedViewDataItem, FeedViewDataType, useGetFeedViewData} from ".
 import {Formatters} from "millegrilles.reactdeps.typescript";
 import {AttachedFile} from "./workers/connection.worker.ts";
 import ThumbnailFuuidV2 from "./ThumbnailFuuidV2.tsx";
+import {PageSelectors} from "./BrowsingElements.tsx";
 
+const PAGE_SIZE = 50;
 
 function FeedViewPage() {
     const {feedId, feedViewId} = useParams();
     const {ready, workers} = useWorkers();
 
-    const {data, error} = useGetFeedViewData({feedId, feedViewId});
+    const [page, setPage] = useState(1);
+    // const [startDate, setStartDate] = useState(null as Date | null);
+    // const [endDate, setEndDate] = useState(null as Date | null);
+    // const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
-    const [feedName, feedView] = useMemo(()=>{
+    const skip = useMemo(()=>{
+        return (page - 1) * PAGE_SIZE;
+    }, [page]);
+
+    const {data, error} = useGetFeedViewData({feedId, feedViewId, skip, limit: PAGE_SIZE});
+
+    const [feedName, feedView, estimatedPages] = useMemo(()=>{
         let name = data?.feed?.info?.name;
         const feedView = data?.view as DecryptedFeedViewType;
         if(!name) name = 'Private feed';
-        return [name, feedView];
+        let estimatedPages = 1;
+        if(data?.estimated_count) estimatedPages = Math.ceil(data.estimated_count / PAGE_SIZE);
+        return [name, feedView, estimatedPages];
     }, [data])
 
     const processFeedHandler = useCallback(async ()=>{
@@ -60,7 +73,9 @@ function FeedViewPage() {
             </section>
 
             <section className="w-full fixed top-32 bottom-10 px-2 overflow-y-auto">
+                <PageSelectors page={page} setPage={setPage} pageCount={estimatedPages} />
                 <ViewFeedGoogleTrendsNews value={data} />
+                <PageSelectors page={page} setPage={setPage} pageCount={estimatedPages} />
             </section>
 
         </>
@@ -68,14 +83,6 @@ function FeedViewPage() {
 }
 
 export default FeedViewPage;
-
-// type GoogleTrendsItem = {
-//     detail: string,
-//     pub_date: number,
-//     thumbnail?: string | null,
-//     url?: string | null,
-//     group?: {title?: string, pub_date?: number, approx_traffic?: string}
-// }
 
 type GoogleTrendsGroup = {label: string, pub_date: number, approx_traffic: string};
 

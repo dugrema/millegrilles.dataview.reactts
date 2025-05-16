@@ -11,6 +11,7 @@ import {DecryptedFeedViewType} from "./GetFeedViews.ts";
 export type FeedViewDataType = {
     feed: DecryptedFeedType | null,
     view: DecryptedFeedViewType | null,
+    estimated_count: number | null,
     items: DecryptedFeedViewDataItem[],
     keys: EncryptedKeyType,
 };
@@ -25,6 +26,8 @@ type UseGetFeedViewsDecryptedType = {
 export type UseGetFeedViewsProps = {
     feedId?: string | null,
     feedViewId?: string | null,
+    skip?: number | null,
+    limit?: number | null,
 }
 
 export type DecryptedItemData = {
@@ -50,7 +53,7 @@ export function useGetFeedViewData(props: UseGetFeedViewsProps): UseGetFeedViews
     const [fetcherKey, fetcherFunction] = useMemo(()=>{
         if(!workers || !ready) return ['notReady', null];
 
-        const fetcherKey = ['feedViewData', props.feedId, props.feedViewId];
+        const fetcherKey = ['feedViewData', props.feedId, props.feedViewId, props.skip, props.limit];
         const fetcherFunction = async () => fetchFeedViewData(workers, ready?ready:false, props);
         return [fetcherKey, fetcherFunction]
     }, [workers, ready, props]);
@@ -134,16 +137,16 @@ async function decryptResponse(decryptedKeys: DecryptedKey[], response: GetFeedV
         items.push(decryptedItem);
     }
 
-    return {keys: decryptedKeyMap, feed, view, items};
+    return {estimated_count: response.estimated_count, keys: decryptedKeyMap, feed, view, items};
 }
 
 async function fetchFeedViewData(workers: AppWorkers | null | undefined, ready: boolean, props: UseGetFeedViewsProps): Promise<FeedViewDataType | null> {
     if(!workers || !ready) return null;
-    const {feedId, feedViewId} = props;
+    const {feedId, feedViewId, skip, limit} = props;
 
     if(!feedId) return null;
 
-    const response = await workers.connection.getFeedViewDataItems(feedViewId);
+    const response = await workers.connection.getFeedViewDataItems(feedViewId, skip, limit);
     if (!response.ok) throw new Error(`Error loading feeds: ${response.err}`);
     console.debug("Get feed view data response", response);
 
