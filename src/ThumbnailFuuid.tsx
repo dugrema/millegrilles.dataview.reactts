@@ -1,6 +1,7 @@
-import {AttachedFile, DecryptedDataItemType} from "./GetData.ts";
+import {DecryptedDataItemType} from "./GetData.ts";
 import {useEffect, useState} from "react";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
+import {AttachedFile} from "./workers/connection.worker.ts";
 
 type ThumbnailFuuidProps = {
     value: AttachedFile,

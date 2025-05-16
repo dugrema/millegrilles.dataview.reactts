@@ -4,19 +4,10 @@ import useSWR, {KeyedMutator} from "swr";
 
 import {multiencoding} from "millegrilles.cryptography";
 
-import {DataItemType, EncryptedKeyType} from "./workers/connection.worker";
+import {AttachedFile, DataItemType, EncryptedKeyType} from "./workers/connection.worker";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 import {AppWorkers} from "./workers/userConnect.ts";
 import {DecryptedFeedType, decryptFeeds} from "./GetFeeds.ts";
-
-export type AttachedFile = {
-    fuuid: string,
-    decryption: {
-        cle_id: string,
-        format: string,
-        nonce: string,
-    }
-}
 
 export type DecryptedDataItemType = DataItemType & {decrypted_data: object, secretKey: Uint8Array, files?: AttachedFile[]};
 

@@ -1,14 +1,14 @@
 {
   "pubkey": "13c8b72bdb0f2a52352621339e3ddef1a2c2ea01ea4db9b6fc7571b6a8f939a1",
-  "estampille": 1747259409,
+  "estampille": 1747405498,
   "kind": 2,
-  "contenu": "{\"commands\":[{\"action\":\"createFeed\",\"domain\":\"DataCollector\"},{\"action\":\"updateFeed\",\"domain\":\"DataCollector\"},{\"action\":\"deleteFeed\",\"domain\":\"DataCollector\"},{\"action\":\"createFeedView\",\"domain\":\"DataCollector\"},{\"action\":\"updateFeedView\",\"domain\":\"DataCollector\"},{\"action\":\"processView\",\"domain\":\"DataCollector\"}],\"defaults\":{\"domain\":\"DataCollector\",\"exchange\":\"2.prive\"},\"requests\":[{\"action\":\"getFilehosts\",\"domain\":\"CoreTopologie\",\"exchange\":\"1.public\"},{\"action\":\"getFeeds\",\"domain\":\"DataCollector\"},{\"action\":\"getDataItemsMostRecent\",\"domain\":\"DataCollector\"},{\"action\":\"getDataItemsDateRange\",\"domain\":\"DataCollector\"},{\"action\":\"getFeedViews\",\"domain\":\"DataCollector\"}]}",
+  "contenu": "{\"commands\":[{\"action\":\"createFeed\",\"domain\":\"DataCollector\"},{\"action\":\"updateFeed\",\"domain\":\"DataCollector\"},{\"action\":\"deleteFeed\",\"domain\":\"DataCollector\"},{\"action\":\"createFeedView\",\"domain\":\"DataCollector\"},{\"action\":\"updateFeedView\",\"domain\":\"DataCollector\"},{\"action\":\"processView\",\"domain\":\"DataCollector\"}],\"defaults\":{\"domain\":\"DataCollector\",\"exchange\":\"2.prive\"},\"requests\":[{\"action\":\"getFilehosts\",\"domain\":\"CoreTopologie\",\"exchange\":\"1.public\"},{\"action\":\"getFeeds\",\"domain\":\"DataCollector\"},{\"action\":\"getDataItemsMostRecent\",\"domain\":\"DataCollector\"},{\"action\":\"getDataItemsDateRange\",\"domain\":\"DataCollector\"},{\"action\":\"getFeedViews\",\"domain\":\"DataCollector\"},{\"action\":\"getFeedViewData\",\"domain\":\"DataCollector\"}]}",
   "routage": {
     "action": "configuration",
     "domaine": "webapi"
   },
-  "id": "f3ccfb78879cdd779ded7b40e02fe3c2beb83c71aefa3c57e509d7a3cf03f0e6",
-  "sig": "286d0c5468008f70dd273dd6fb0102b1e8e1d70099188976230884351505bedcd2048eb3c3fcac553a96f842bf1205bad0eae81f076580bd31821bbefec0a60b",
+  "id": "012547764116cff75071b17f3a814fb49b0bcc611e20a3a97b5ada697839d66d",
+  "sig": "ada920fdb2606f43d26ec403f29b6aaa367df546debcf7aeb4689af0287ef4c6fb7215cfb259235ad5d2fe01130c074fba0cd6082786149535d1aa20f0fba408",
   "certificat": [
     "-----BEGIN CERTIFICATE-----\nMIIBqjCCAVygAwIBAgIUV2vyebG5axDbIherRxF9lCUcJhMwBQYDK2VwMBYxFDAS\nBgNVBAMTC01pbGxlR3JpbGxlMB4XDTI1MDQyMzExNTgzNVoXDTI1MDUyNDExNTg1\nNVowazESMBAGA1UEAwwJU2lnbmF0dXJlMRIwEAYDVQQLDAlzaWduYXR1cmUxQTA/\nBgNVBAoMOHplWW5jUnFFcVo2ZVRFbVVaOHdoSkZ1SEc3OTZlU3ZDVFdFNE00MzJp\nelhycDIyYkF0d0dtN0pmMCowBQYDK2VwAyEAE8i3K9sPKlI1JiEznj3e8aLC6gHq\nTbm2/HVxtqj5OaGjZzBlMCMGBCoDBAEEG3NpZ25hdHVyZSxjYXRhbG9ndWVzLHdl\nYmFwaTAfBgNVHSMEGDAWgBTTiP/MFw4DDwXqQ/J2LLYPRUkkETAdBgNVHQ4EFgQU\n+0EFUt08N75tV8Q3rwg58ug5Z5AwBQYDK2VwA0EAO+QHBvSouBYcB5vkFfgF54FY\nfpi2OQr4aLcguzYQSTvmZMVFpZ1b1IyeQQ5SzD7gCo5Xhf2oHswJV7WTU5ubBQ==\n-----END CERTIFICATE-----"
   ],

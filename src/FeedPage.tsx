@@ -3,12 +3,13 @@ import {Link, useParams} from "react-router-dom";
 import Datetime from 'react-datetime';
 import {Moment} from 'moment';
 
-import {AttachedFile, DataItemsListType, DecryptedDataItemType, useGetData} from "./GetData.ts";
+import {DataItemsListType, DecryptedDataItemType, useGetData} from "./GetData.ts";
 import {Formatters} from "millegrilles.reactdeps.typescript";
 import ThumbnailFuuid from "./ThumbnailFuuid.tsx";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 import {PageSelectors} from "./BrowsingElements.tsx";
 import {DecryptedFeedViewType, FeedViewsListType, useGetFeedViews} from "./GetFeedViews.ts";
+import {AttachedFile} from "./workers/connection.worker.ts";
 
 const PAGE_SIZE = 35;
 
