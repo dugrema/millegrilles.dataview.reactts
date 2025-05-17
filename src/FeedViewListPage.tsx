@@ -1,10 +1,30 @@
 import {DecryptedFeedViewType, useGetFeedViews} from "./GetFeedViews.ts";
 import {Link, useParams} from "react-router-dom";
+import {useEffect, useMemo, useState} from "react";
+import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 
 function FeedViewListPage() {
     const {feedId} = useParams();
 
     const {data, error, isLoading} = useGetFeedViews({feedId});
+    const {userId, ready, workers} = useWorkers();
+
+    const [isAdmin, setIsAdmin] = useState<boolean>(false);
+
+    useEffect(()=> {
+        if(!workers || !ready) return;
+        workers.connection.getCertificate()
+            .then(certificate=>{
+                const isAdmin = certificate?.extensions?.adminGrants?.includes("proprietaire") || false;
+                setIsAdmin(isAdmin);
+            })
+            .catch(err=>console.warn("Error loading certificate", err));
+    }, [workers, ready, setIsAdmin]);
+
+    const isEditable = useMemo(()=>{
+        if(isAdmin || !data?.feed || !userId) return true;
+        return data.feed.feed.user_id === userId;
+    }, [userId, data, isAdmin]);
 
     if(error) return (
         <p>Error: {''+error}</p>
@@ -23,6 +43,15 @@ function FeedViewListPage() {
                   className="btn inline-block text-center text-slate-300 text bg-indigo-600 active:text-slate-800 hover:bg-indigo-800 active:bg-indigo-700">
                 Back
             </Link>
+
+            {isEditable?
+                <>
+                    <Link to={`/dataviewer/private/feed/${feedId}/update`}
+                          className="btn inline-block text-center text-slate-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
+                        Edit
+                    </Link>
+                </>
+            :<></>}
 
             <div className='pt-4'>
                 {data.views.map(item=>{

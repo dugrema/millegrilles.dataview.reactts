@@ -17,7 +17,6 @@ function FeedDataContentGoogleTrendsV1() {
     const [page, setPage] = useState(1);
     const [startDate, setStartDate] = useState(null as Date | null);
     const [endDate, setEndDate] = useState(null as Date | null);
-    const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
     const skip = useMemo(()=>{
         return (page - 1) * PAGE_SIZE;
@@ -38,6 +37,7 @@ function FeedDataContentGoogleTrendsV1() {
         return Math.ceil(data.estimated_count / PAGE_SIZE);
     }, [data]);
 
+    const [isAdmin, setIsAdmin] = useState<boolean>(false);
     useEffect(()=> {
         if(!workers || !ready) return;
         workers.connection.getCertificate()
@@ -47,7 +47,6 @@ function FeedDataContentGoogleTrendsV1() {
             })
             .catch(err=>console.warn("Error loading certificate", err));
     }, [workers, ready, setIsAdmin]);
-
     const isEditable = useMemo(()=>{
         if(isAdmin || !data?.feed || !userId) return true;
         return data.feed.feed.user_id === userId;
@@ -73,10 +72,6 @@ function FeedDataContentGoogleTrendsV1() {
                         <Link to={`/dataviewer/private/feed/${feedId}/update`}
                               className="btn inline-block text-center text-slate-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
                             Edit
-                        </Link>
-                        <Link to={`/dataviewer/private/feed/${feedId}/addView`}
-                              className="btn inline-block text-center text-slate-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
-                            Add View
                         </Link>
                     </>
                     :<></>}

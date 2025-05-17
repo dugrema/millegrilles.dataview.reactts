@@ -1,5 +1,5 @@
 import {Link, useParams} from "react-router-dom";
-import {useCallback, useMemo, useState} from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import {DecryptedFeedViewType} from "./GetFeedViews.ts";
 import ActionButton from "./ActionButton.tsx";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
@@ -11,7 +11,7 @@ const PAGE_SIZE = 50;
 
 function FeedViewPage() {
     const {feedId, feedViewId} = useParams();
-    const {ready, workers} = useWorkers();
+    const {ready, workers, userId} = useWorkers();
 
     const [page, setPage] = useState(1);
     // const [startDate, setStartDate] = useState(null as Date | null);
@@ -42,6 +42,21 @@ function FeedViewPage() {
         if(response.ok !== true) throw new Error("Error starting view process: " + response.err);
     }, [workers, ready, feedView]);
 
+    const [isAdmin, setIsAdmin] = useState<boolean>(false);
+    useEffect(()=> {
+        if(!workers || !ready) return;
+        workers.connection.getCertificate()
+            .then(certificate=>{
+                const isAdmin = certificate?.extensions?.adminGrants?.includes("proprietaire") || false;
+                setIsAdmin(isAdmin);
+            })
+            .catch(err=>console.warn("Error loading certificate", err));
+    }, [workers, ready, setIsAdmin]);
+    const isEditable = useMemo(()=>{
+        if(isAdmin || !data?.feed || !userId) return true;
+        return data.feed.feed.user_id === userId;
+    }, [userId, data, isAdmin]);
+
     if(error) return (
         <section className='fixed top-10 md:top-12 left-0 right-0 px-2'>
             <h1 className="text-indigo-300 text-xl font-bold pb-2">{feedName}: {feedView?.info?.name}</h1>
@@ -61,13 +76,18 @@ function FeedViewPage() {
                       className="btn inline-block text-center text-indigo-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
                     Back
                 </Link>
-                <Link to={`/dataviewer/private/feed/${feedId}/${feedView?.info?.feed_view_id}/update`}
-                      className="btn inline-block text-center text-indigo-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
-                    Edit
-                </Link>
-                <ActionButton onClick={processFeedHandler} disabled={!ready} mainButton={true} revertSuccessTimeout={3}>
-                    Run
-                </ActionButton>
+                {isEditable?
+                    <>
+                        <Link to={`/dataviewer/private/feed/${feedId}/${feedView?.info?.feed_view_id}/update`}
+                              className="btn inline-block text-center text-indigo-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
+                            Edit
+                        </Link>
+                        <ActionButton onClick={processFeedHandler} disabled={!ready} mainButton={true} revertSuccessTimeout={3}>
+                            Run
+                        </ActionButton>
+                    </>
+                    :<></>
+                }
             </section>
 
             <section className="w-full fixed top-28 bottom-10 px-2 overflow-y-auto">
