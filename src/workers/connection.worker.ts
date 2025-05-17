@@ -156,9 +156,20 @@ export class AppsConnectionWorker extends ConnectionWorker {
         return await this.connection.sendRequest({feed_id: feedId, feed_view_ids}, DOMAIN_DATA_COLLECTOR_NAME, 'getFeedViews') as Promise<GetFeedViewsResponseType>;
     }
 
-    async getFeedViewDataItems(feedViewId?: string | null, skip?: number | null, limit?: number | null) {
+    async getFeedViewDataItems(feedViewId?: string | null, skip?: number | null, limit?: number | null, start_date?: Date | null, end_date?: Date | null) {
         if(!this.connection) throw new Error("Connection is not initialized");
-        return await this.connection.sendRequest({feed_view_id: feedViewId, skip, limit}, DOMAIN_DATA_COLLECTOR_NAME, 'getFeedViewData') as Promise<GetFeedViewDataResponseType>;
+        let request;
+        if(start_date && end_date) {
+            request = {
+                feed_view_id: feedViewId, skip, limit,
+                // Convert dates to epoch seconds
+                start_date: Math.floor(start_date.getTime()/1000),
+                end_date: Math.floor(end_date.getTime()/1000),
+            };
+        } else {
+            request = {feed_view_id: feedViewId, skip, limit};
+        }
+        return await this.connection.sendRequest(request, DOMAIN_DATA_COLLECTOR_NAME, 'getFeedViewData') as Promise<GetFeedViewDataResponseType>;
     }
 
     async getDataItems(feedId: string, skip?: number | null, limit?: number | null, start_date?: Date | null, end_date?: Date | null) {

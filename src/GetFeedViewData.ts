@@ -28,6 +28,8 @@ export type UseGetFeedViewsProps = {
     feedViewId?: string | null,
     skip?: number | null,
     limit?: number | null,
+    start_date: Date | null,
+    end_date: Date | null,
 }
 
 export type DecryptedItemData = {
@@ -53,8 +55,16 @@ export function useGetFeedViewData(props: UseGetFeedViewsProps): UseGetFeedViews
     const [fetcherKey, fetcherFunction] = useMemo(()=>{
         if(!workers || !ready) return ['notReady', null];
 
-        const fetcherKey = ['feedViewData', props.feedId, props.feedViewId, props.skip, props.limit];
-        const fetcherFunction = async () => fetchFeedViewData(workers, ready?ready:false, props);
+        // Only use dates if both are present and the range is valid
+        let start_date = null as Date | null, end_date = null as Date | null;
+        if(props.start_date && props.end_date && props.start_date < props.end_date) {
+            start_date = props.start_date;
+            end_date = props.end_date;
+        }
+
+        const fetcherKey = ['feedViewData', props.feedId, props.feedViewId, props.skip, props.limit, start_date, end_date];
+        const fetcherFunction =
+            async () => fetchFeedViewData(workers, ready?ready:false, props);
         return [fetcherKey, fetcherFunction]
     }, [workers, ready, props]);
 
@@ -146,7 +156,10 @@ async function fetchFeedViewData(workers: AppWorkers | null | undefined, ready: 
 
     if(!feedId) return null;
 
-    const response = await workers.connection.getFeedViewDataItems(feedViewId, skip, limit);
+    const start_date = props.start_date || null;
+    const end_date = props.end_date || null;
+
+    const response = await workers.connection.getFeedViewDataItems(feedViewId, skip, limit, start_date, end_date);
     if (!response.ok) throw new Error(`Error loading feeds: ${response.err}`);
     console.debug("Get feed view data response", response);
 

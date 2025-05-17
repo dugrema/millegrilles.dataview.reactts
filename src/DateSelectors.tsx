@@ -46,28 +46,32 @@ function DateSelectors(props: DateSelectorProps) {
     }, [])
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-3">
-            <div className="bg-indigo-800">
-                <span className="pr-2">Start</span>
-                <Datetime
-                    value={startDate || undefined}
-                    onChange={onChangeStartDate}
-                    dateFormat={DATETIME_DATE_FORMAT}
-                    timeFormat={DATETIME_TIME_FORMAT}
-                    closeOnSelect={true}
-                    className="inline-block"
-                />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 bg-indigo-800">
+            <div>
+                <span className="pr-2 text-right">Start</span>
+                <div className='mr-4 border-2 border-indigo-500 bg-indigo-400 inline'>
+                    <Datetime
+                        value={startDate || undefined}
+                        onChange={onChangeStartDate}
+                        dateFormat={DATETIME_DATE_FORMAT}
+                        timeFormat={DATETIME_TIME_FORMAT}
+                        closeOnSelect={true}
+                        className="inline-block"
+                    />
+                </div>
             </div>
-            <div className="bg-indigo-800">
-                <span className="pr-2">End</span>
-                <Datetime
-                    value={endDate || undefined}
-                    onChange={onChangeEndDate}
-                    dateFormat={DATETIME_DATE_FORMAT}
-                    timeFormat={DATETIME_TIME_FORMAT}
-                    closeOnSelect={true}
-                    className="inline-block"
-                />
+            <div>
+                <span className="pr-2 text-right">End</span>
+                <div className='mr-4 border-2 border-indigo-500 bg-indigo-400 inline'>
+                    <Datetime
+                        value={endDate || undefined}
+                        onChange={onChangeEndDate}
+                        dateFormat={DATETIME_DATE_FORMAT}
+                        timeFormat={DATETIME_TIME_FORMAT}
+                        closeOnSelect={true}
+                        className="inline-block"
+                    />
+                </div>
             </div>
             <div>
                 <button onClick={clearDates}

@@ -6,6 +6,7 @@ import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 import {useGetFeedViewData} from "./GetFeedViewData.ts";
 import {PageSelectors} from "./BrowsingElements.tsx";
 import ViewFeedGoogleTrendsNews from "./DataviewGoogleTrends.tsx";
+import DateSelectors from "./DateSelectors.tsx";
 
 const PAGE_SIZE = 50;
 
@@ -14,15 +15,14 @@ function FeedViewPage() {
     const {ready, workers, userId} = useWorkers();
 
     const [page, setPage] = useState(1);
-    // const [startDate, setStartDate] = useState(null as Date | null);
-    // const [endDate, setEndDate] = useState(null as Date | null);
-    // const [isAdmin, setIsAdmin] = useState<boolean>(false);
+    const [startDate, setStartDate] = useState(null as Date | null);
+    const [endDate, setEndDate] = useState(null as Date | null);
 
     const skip = useMemo(()=>{
         return (page - 1) * PAGE_SIZE;
     }, [page]);
 
-    const {data, error} = useGetFeedViewData({feedId, feedViewId, skip, limit: PAGE_SIZE});
+    const {data, error} = useGetFeedViewData({feedId, feedViewId, skip, limit: PAGE_SIZE, start_date: startDate, end_date: endDate});
 
     const [feedName, feedView, estimatedPages] = useMemo(()=>{
         let name = data?.feed?.info?.name;
@@ -90,7 +90,8 @@ function FeedViewPage() {
                 }
             </section>
 
-            <section className="w-full fixed top-28 bottom-10 px-2 overflow-y-auto">
+            <section className="w-full fixed top-32 bottom-10 px-2 overflow-y-auto pb-4">
+                <DateSelectors startDate={startDate} endDate={endDate} setStartDate={setStartDate} setEndDate={setEndDate}/>
                 <PageSelectors page={page} setPage={setPage} pageCount={estimatedPages} />
                 <ViewFeedGoogleTrendsNews value={data} />
                 <PageSelectors page={page} setPage={setPage} pageCount={estimatedPages} />

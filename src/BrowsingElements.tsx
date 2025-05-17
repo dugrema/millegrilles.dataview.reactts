@@ -30,7 +30,7 @@ export function PageSelectors(props: {page: number, pageCount: number, setPage: 
     if(pageCount <= 1) return <></>;
 
     return (
-        <div className='w-full text-center pt-6'>
+        <div className='w-full text-center'>
             {pageElems}
         </div>
     )
