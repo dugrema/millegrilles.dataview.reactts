@@ -32,11 +32,9 @@ function FeedViewListPage() {
 
     if(isLoading) return <p>Loading ...</p>;
 
-    if(!data || data.views.length === 0) return <>No feed views.</>;
-
     return (
         <section className='fixed top-10 md:top-12 left-0 right-0 px-2'>
-            <h1 className="text-indigo-300 text-xl font-bold pb-2">{data.feed?.info?.name}: View list</h1>
+            <h1 className="text-indigo-300 text-xl font-bold pb-2">{data?.feed?.info?.name}: View list</h1>
             {error?<p>Error: {''+error}</p>:<></>}
 
             <Link to={`/dataviewer/private`}
@@ -50,16 +48,32 @@ function FeedViewListPage() {
                           className="btn inline-block text-center text-slate-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
                         Edit
                     </Link>
+                    <Link to={`/dataviewer/private/feed/${feedId}/addView`}
+                          className="btn inline-block text-center text-slate-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
+                        Add view
+                    </Link>
                 </>
             :<></>}
 
             <div className='pt-4'>
-                {data.views.map(item=>{
-                    return <ViewFeedItem key={item.info?.feed_view_id} value={item} />
-                })}
+                <ViewFeedItems value={data?.views} />
             </div>
         </section>
     )
+}
+
+type ViewFeedItemsProps = {
+    value: DecryptedFeedViewType[] | null | undefined,
+}
+
+function ViewFeedItems(props: ViewFeedItemsProps) {
+    const {value} = props;
+
+    if(!value || value.length === 0) return <p>No views are configured.</p>
+
+    return value.map(item=>{
+        return <ViewFeedItem key={item.info?.feed_view_id} value={item} />;
+    })
 }
 
 function ViewFeedItem(props: {value: DecryptedFeedViewType}) {

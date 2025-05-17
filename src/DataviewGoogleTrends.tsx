@@ -4,7 +4,7 @@ import {Formatters} from "millegrilles.reactdeps.typescript";
 import {AttachedFile} from "./workers/connection.worker.ts";
 import ThumbnailFuuidV2 from "./ThumbnailFuuidV2.tsx";
 
-type GoogleTrendsGroup = {label: string, pub_date: number, approx_traffic: string};
+type GoogleTrendsGroup = {label: string, pub_date: number, other?: {approx_traffic?: string}};
 
 let viewMode = 'line';
 viewMode = 'large';
@@ -47,7 +47,7 @@ function ViewFeedGoogleTrendsNews(props: {value: FeedViewDataType | null}) {
             elems.push(
                 <div key={groupKey} className="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-4 xl:col-span-6 grid grid-cols-3 md:grid-cols-6 bg-indigo-800/50 p-2 font-bold">
                     <p className='col-span-3'>{groupInfo?.label}</p>
-                    <p>({groupInfo?.approx_traffic})</p>
+                    <p>({groupInfo?.other?.approx_traffic})</p>
                     <p className='col-span-2 md:col-span-1 text-right'>
                         {groupInfo?.pub_date?
                             <Formatters.FormatterDate value={groupInfo.pub_date} />
@@ -93,6 +93,17 @@ type FeedViewDataItemLargeProps = {
     feed: FeedViewDataType,
 }
 
+function getDataUrl(associatedUrls: {[url: string]: string} | null | undefined, values: string[]): string {
+    if(!associatedUrls) return '#';
+    for(const innerUrl of Object.keys(associatedUrls)) {
+        const value = associatedUrls[innerUrl];
+        if(values.includes(value)) {
+            return innerUrl
+        }
+    }
+    return '#';
+}
+
 function FeedViewDataItemLine(props: FeedViewDataItemLargeProps) {
     const {value, feed} = props;
 
@@ -106,13 +117,13 @@ function FeedViewDataItemLine(props: FeedViewDataItemLargeProps) {
             thumbnailDecryptionKey = feed.keys[keyId];
         }
     }
-    let url = '#';
+
+    const url = getDataUrl(value.data?.urls, ['main', 'article']);
     let newsDomain = '';
-    if(value.data?.url) {
-        url = value.data.url;
+    if(url !== '#') {
         try {
             newsDomain = new URL(url).hostname;
-            if(newsDomain.startsWith('www.')) {
+            if (newsDomain.startsWith('www.')) {
                 newsDomain = newsDomain.slice(4);
             }
         } catch (err) {
@@ -149,13 +160,13 @@ function FeedViewDataItemLarge(props: FeedViewDataItemLargeProps) {
             thumbnailDecryptionKey = feed.keys[keyId];
         }
     }
-    let url = '#';
+
+    const url = getDataUrl(value.data?.urls, ['main', 'article']);
     let newsDomain = '';
-    if(value.data?.url) {
-        url = value.data.url;
+    if(url !== '#') {
         try {
             newsDomain = new URL(url).hostname;
-            if(newsDomain.startsWith('www.')) {
+            if (newsDomain.startsWith('www.')) {
                 newsDomain = newsDomain.slice(4);
             }
         } catch (err) {

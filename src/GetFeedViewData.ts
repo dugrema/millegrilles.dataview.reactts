@@ -34,9 +34,10 @@ export type UseGetFeedViewsProps = {
 
 export type DecryptedItemData = {
     label?: string | null,
-    pub_date?: number | null,
-    url?: string | null,
-    item_source?: string | null,
+    date?: number | null,
+    data_str?: {[key: string]: string},
+    data_number?: {[key: string]: string},
+    urls?: {[url: string]: string},
     group?: unknown,
 }
 
