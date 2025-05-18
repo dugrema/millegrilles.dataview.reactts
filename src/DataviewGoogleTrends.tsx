@@ -218,8 +218,8 @@ function DescriptionText(props: {className?: string, value?: string | string[] |
         if(!value) return [];
         let paragraphs = value;
         if(typeof(paragraphs) === 'string') paragraphs = paragraphs.split('\n');
-        return paragraphs.map(item=>{
-            return <p className={className}>{item}</p>
+        return paragraphs.map((item, idx)=>{
+            return <p key={""+idx} className={className}>{item}</p>
         })
     }, [className, value])
 
