@@ -6,7 +6,7 @@ import ThumbnailFuuidV2 from "./ThumbnailFuuidV2.tsx";
 
 type GoogleTrendsGroup = {label: string, pub_date: number, other?: {approx_traffic?: string}};
 
-let viewMode = 'line';
+let viewMode = 'line-detail';
 viewMode = 'large';
 
 function ViewFeedGoogleTrendsNews(props: {value: FeedViewDataType | null}) {
@@ -23,7 +23,7 @@ function ViewFeedGoogleTrendsNews(props: {value: FeedViewDataType | null}) {
         const groups: {[title_date: string]: DecryptedFeedViewDataItem[]} = {};
         const groupOrder: string[] = [];
         for(const item of value.items) {
-            const groupKey = item.info.group_id || 'items';
+            const groupKey = item.info.group_id || 'nogroup-items';
 
             // Add item to group list
             const items = groups[groupKey];
@@ -42,22 +42,28 @@ function ViewFeedGoogleTrendsNews(props: {value: FeedViewDataType | null}) {
             const groupElems = groups[groupKey];
             const firstGElem = groupElems[0].data;
             const groupInfo = firstGElem?.group as GoogleTrendsGroup;
-            elems.push(
-                <div key={groupKey} className="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-4 xl:col-span-6 grid grid-cols-3 md:grid-cols-6 bg-indigo-800/50 p-2 font-bold">
-                    <p className='col-span-3'>{groupInfo?.label}</p>
-                    <p>({groupInfo?.other?.approx_traffic})</p>
-                    <p className='col-span-2 md:col-span-1 text-right'>
-                        {groupInfo?.pub_date?
-                            <Formatters.FormatterDate value={groupInfo.pub_date} />
-                            :
-                            <></>
-                        }
-                    </p>
-                </div>
-            )
+            if(groupKey !== 'nogroup-items') {
+                viewMode = 'large';
+                elems.push(
+                    <div key={groupKey}
+                         className="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-4 xl:col-span-6 grid grid-cols-3 md:grid-cols-6 bg-indigo-800/50 p-2 font-bold">
+                        <p className='col-span-3'>{groupInfo?.label}</p>
+                        <p>({groupInfo?.other?.approx_traffic})</p>
+                        <p className='col-span-2 md:col-span-1 text-right'>
+                            {groupInfo?.pub_date ?
+                                <Formatters.FormatterDate value={groupInfo.pub_date}/>
+                                :
+                                <></>
+                            }
+                        </p>
+                    </div>
+                )
+            } else {
+                viewMode = 'line-detail';
+            }
 
             for(const elem of groupElems) {
-                if(viewMode == 'line') {
+                if(viewMode == 'line-detail') {
                     elems.push(<FeedViewDataItemLine key={elem.info.data_id} value={elem} feed={value}/>);
                 } else if(viewMode == 'large') {
                     elems.push(<FeedViewDataItemLarge key={elem.info.data_id} value={elem} feed={value}/>);
@@ -130,18 +136,33 @@ function FeedViewDataItemLine(props: FeedViewDataItemLargeProps) {
         }
     }
 
+    const description = value.data?.data_str?.description || value.data?.data_str?.summary;
+    let keywords = value.data?.data_str?.keywords;
+    if(Array.isArray(keywords)) {
+        keywords = keywords.join(', ');
+    }
+
     return (
-        <a key={value.info.data_id} href={url} target='_blank' className="grid grid-cols-6 space-x-4">
+        <>
+            <a key={value.info.data_id} href={url} target='_blank' className="grid grid-cols-6 pt-2">
+                <p className="col-span-6 sm:col-span-3 md:col-span-4">
+                    <span className='text-lg font-bold'>{value.data?.label}</span>
+                    {newsDomain || keywords?
+                        <span className='block text-xs pb-1 space-x-4'>
+                            <Formatters.FormatterDate value={value.info.pub_date / 1000} />
+                            {newsDomain?<span>{newsDomain}</span>:<></>}
+                            {keywords?<span>{keywords}</span>:<></>}
+                        </span>
+                    :<></>}
+                </p>
+            </a>
             {thumbnail?
                 <ThumbnailFuuidV2 value={thumbnail} secretKey={thumbnailDecryptionKey} className='object-cover pr-2 col-span-6 sm:col-span-3 md:col-span-2' />
                 :
                 <div></div>
             }
-            <p className="col-span-6 sm:col-span-3 md:col-span-4">
-                {value.data?.label}
-                {newsDomain?<span className="block text-xs">{newsDomain}</span>:<></>}
-            </p>
-        </a>
+            {description && <DescriptionText className='col-span-6 text-sm' value={description}/>}
+        </>
     )
 }
 
@@ -187,5 +208,26 @@ function FeedViewDataItemLarge(props: FeedViewDataItemLargeProps) {
                 </p>
             </a>
         </div>
+    )
+}
+
+function DescriptionText(props: {className?: string, value?: string | string[] | null}) {
+    const {className, value} = props;
+
+    const elems = useMemo(()=>{
+        if(!value) return [];
+        let paragraphs = value;
+        if(typeof(paragraphs) === 'string') paragraphs = paragraphs.split('\n');
+        return paragraphs.map(item=>{
+            return <p className={className}>{item}</p>
+        })
+    }, [className, value])
+
+    if(!value) return <></>;
+
+    return (
+        <>
+            {elems}
+        </>
     )
 }
