@@ -6,15 +6,18 @@ import ThumbnailFuuidV2 from "./ThumbnailFuuidV2.tsx";
 
 type GoogleTrendsGroup = {label: string, pub_date: number, other?: {approx_traffic?: string}};
 
-let viewMode = 'line-detail';
-viewMode = 'large';
+// let viewMode = 'line-detail';
+// let viewMode = 'large';
 
 function ViewFeedGoogleTrendsNews(props: {value: FeedViewDataType | null}) {
     const {value} = props
 
-    const dataElems = useMemo(()=>{
+    const [dataElems, viewMode] = useMemo(()=>{
+        // Default to group view mode (large thumbnails). Will switch to line-detail if no group is detected.
+        let viewMode = 'large';
+
         if(!value || value.items.length === 0) {
-            return [[], null];
+            return [[[], null], viewMode];
         }
 
         // console.debug("Items", value);
@@ -71,7 +74,7 @@ function ViewFeedGoogleTrendsNews(props: {value: FeedViewDataType | null}) {
             }
         }
 
-        return elems;
+        return [elems, viewMode];
     }, [value]);
 
     if(viewMode === 'large') {
@@ -141,6 +144,7 @@ function FeedViewDataItemLine(props: FeedViewDataItemLargeProps) {
     if(Array.isArray(keywords)) {
         keywords = keywords.join(', ');
     }
+    keywords = stripDomElements(keywords);
 
     return (
         <>
@@ -219,7 +223,8 @@ function DescriptionText(props: {className?: string, value?: string | string[] |
         let paragraphs = value;
         if(typeof(paragraphs) === 'string') paragraphs = paragraphs.split('\n');
         return paragraphs.map((item, idx)=>{
-            return <p key={""+idx} className={className}>{item}</p>
+            const strippedContent = stripDomElements(item);
+            return <p key={""+idx} className={className}>{strippedContent}</p>
         })
     }, [className, value])
 
@@ -230,4 +235,15 @@ function DescriptionText(props: {className?: string, value?: string | string[] |
             {elems}
         </>
     )
+}
+
+/**
+ * Strips all DOM elements from a string to display safely in the browser.
+ * Source: https://stackoverflow.com/questions/822452/strip-html-tags-from-text-using-plain-javascript/47140708#47140708
+ * @param html
+ */
+function stripDomElements(html: string | null | undefined){
+    if(!html) return "";
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || "";
 }
