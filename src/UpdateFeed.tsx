@@ -190,7 +190,7 @@ export function FeedUpdateFields(props: FeedUpdateFieldsProps) {
 
             <label htmlFor="custom-code" className='col-span-4'>Custom Code</label>
             <textarea id="custom-code" rows={20} onChange={e=>props.setCustomCode(e.target.value)} value={props.customCode}
-                      className='col-span-4 text-white bg-indigo-900 border-2 border-indigo-400 p-2' />
+                      className='font-mono col-span-4 text-white bg-indigo-900 border-2 border-indigo-400 p-2' />
 
             <label htmlFor="securitySelect">Share level</label>
             <SecurityLevelList id="securitySelect" value={props.security} onChange={e=>props.setSecurity(e.target.value)}

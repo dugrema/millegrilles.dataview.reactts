@@ -151,7 +151,7 @@ export function ConfigureView(props: ViewUpdateFieldsProps) {
         setMappingCode(info.mapping_code || '');
         setActive(info.active);
         setDecrypted(info.decrypted);
-    }, [init, loaded, setLoaded,setName, setMappingCode, setActive, setDecrypted]);
+    }, [init, loaded, setLoaded, setName, setMappingCode, setActive, setDecrypted]);
 
     return (
         <>
@@ -173,7 +173,7 @@ export function ConfigureView(props: ViewUpdateFieldsProps) {
 
                 <label htmlFor="mapping-code" className='col-span-4'>Mapping python code</label>
                 <textarea id="mapping-code" rows={20} onChange={e=>setMappingCode(e.target.value)} value={mappingCode}
-                          className='col-span-4 text-white bg-indigo-900 border-2 border-indigo-400 p-2' />
+                          className='font-mono col-span-4 text-white bg-indigo-900 border-2 border-indigo-400 p-2' />
 
             </div>
         </>

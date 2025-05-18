@@ -23,17 +23,15 @@ function ViewFeedGoogleTrendsNews(props: {value: FeedViewDataType | null}) {
         const groups: {[title_date: string]: DecryptedFeedViewDataItem[]} = {};
         const groupOrder: string[] = [];
         for(const item of value.items) {
-            const groupKey = item.info.group_id;
+            const groupKey = item.info.group_id || 'items';
 
             // Add item to group list
-            if(groupKey) {
-                const items = groups[groupKey];
-                if (items) {
-                    items.push(item);
-                } else {
-                    groups[groupKey] = [item];
-                    groupOrder.push(groupKey);
-                }
+            const items = groups[groupKey];
+            if (items) {
+                items.push(item);
+            } else {
+                groups[groupKey] = [item];
+                groupOrder.push(groupKey);
             }
         }
 
