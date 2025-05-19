@@ -1,4 +1,4 @@
-import {useCallback, useMemo} from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import {Link} from "react-router-dom";
 
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
@@ -36,8 +36,19 @@ export default PrivateFeeds;
 function FeedTypeList() {
 
     const { mutate } = useSWRConfig();
-    const {workers, ready} = useWorkers();
+    const {workers, ready, userId} = useWorkers();
     const {data, error, isLoading} = useGetFeeds();
+
+    const [isAdmin, setIsAdmin] = useState<boolean>(false);
+    useEffect(()=> {
+        if(!workers || !ready) return;
+        workers.connection.getCertificate()
+            .then(certificate=>{
+                const isAdmin = certificate?.extensions?.adminGrants?.includes("proprietaire") || false;
+                setIsAdmin(isAdmin);
+            })
+            .catch(err=>console.warn("Error loading certificate", err));
+    }, [workers, ready, setIsAdmin]);
 
     const deleteFeed = useCallback(async (e: React.MouseEvent<HTMLButtonElement>) => {
         if(!workers || !ready) throw new Error('Workers not initialized');
@@ -54,14 +65,15 @@ function FeedTypeList() {
         if(data.feeds.length === 0) return (
             <p>No feeds.</p>
         );
-
         return data.feeds.map(feed => {
+            let isEditable = isAdmin || !userId;
+            if(!isEditable) isEditable = feed.feed.user_id === userId;
             return (
-                <FeedItem key={feed.feed.feed_id} value={feed} onDelete={deleteFeed}
+                <FeedItem key={feed.feed.feed_id} value={feed} onDelete={isEditable?deleteFeed:null}
                           className="odd:bg-indigo-600/30 even:bg-indigo-800/30 hover:bg-indigo-700 px-2 py-2 md:h-12" />
             )
         });
-    }, [data, deleteFeed]);
+    }, [data, deleteFeed, isAdmin, userId]);
 
     if(isLoading) {
         return <p>Feeds loading ...</p>;
@@ -80,14 +92,12 @@ function FeedTypeList() {
 
 type FeedItemType = {
     value: DecryptedFeedType,
-    onDelete: (e: React.MouseEvent<HTMLButtonElement>) => Promise<void>,
+    onDelete?: ((e: React.MouseEvent<HTMLButtonElement>) => Promise<void>) | null,
     className?: string,
 };
 
 function FeedItem(props: FeedItemType) {
     const {value, className} = props;
-
-    const {userId} = useWorkers();
 
     const classNameInner = useMemo(()=>{
         let classNameInner = 'grid grid-cols-2 sm:grid-cols-6';
@@ -95,23 +105,18 @@ function FeedItem(props: FeedItemType) {
         return classNameInner;
     }, [className]);
 
-    const canDelete = useMemo(()=>{
-        if(!value || !userId) return false;
-        return value.feed.user_id === userId;
-    }, [value, userId]);
-
     return (
         <Link to={`feed/${value.feed.feed_id}`} className={classNameInner}>
             <div className="col-span-6 md:col-span-2">{value.info?.name}</div>
             <p className="col-span-3 md:col-span-2">{value.feed.feed_type}</p>
             <p className="sm:col-span-2 md:col-span-1">
                 {value.feed.active?'Active':'Inactive'}
-                {canDelete?<></>:
+                {props.onDelete?<></>:
                     <span className='pl-1'>(Shared)</span>
                 }
             </p>
             <div className='text-right pr-2 col-span-4 sm:col-span-1'>
-                {canDelete?
+                {props.onDelete?
                     <ActionButton onClick={props.onDelete} value={value.feed.feed_id} varwidth={8} confirm={true}>
                         <img src={TrashIcon} alt="Delete feed" className="w-8" />
                     </ActionButton>
