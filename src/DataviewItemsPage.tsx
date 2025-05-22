@@ -148,9 +148,9 @@ function FeedViewDataItemLine(props: FeedViewDataItemLargeProps) {
 
     return (
         <>
-            <a key={value.info.data_id} href={url} target='_blank' className="grid grid-cols-6 pt-2">
+            <div key={value.info.data_id} className="grid grid-cols-6 pt-2">
                 <p className="col-span-6 sm:col-span-3 md:col-span-4">
-                    <span className='text-lg font-bold'>{value.data?.label}</span>
+                    <a href={url} target='_blank' className='text-lg font-bold'>{value.data?.label}</a>
                     {newsDomain || keywords?
                         <span className='block text-xs pb-1 space-x-4'>
                             <Formatters.FormatterDate value={value.info.pub_date / 1000} />
@@ -159,7 +159,7 @@ function FeedViewDataItemLine(props: FeedViewDataItemLargeProps) {
                         </span>
                     :<></>}
                 </p>
-            </a>
+            </div>
             {thumbnail?
                 <ThumbnailFuuidV2 value={thumbnail} secretKey={thumbnailDecryptionKey} className='object-cover pr-2 col-span-6 sm:col-span-3 md:col-span-2' />
                 :

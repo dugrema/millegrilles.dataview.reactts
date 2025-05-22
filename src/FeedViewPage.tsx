@@ -5,7 +5,7 @@ import ActionButton from "./ActionButton.tsx";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 import {useGetFeedViewData} from "./GetFeedViewData.ts";
 import {PageSelectors} from "./BrowsingElements.tsx";
-import ViewFeedGoogleTrendsNews from "./DataviewGoogleTrends.tsx";
+import ViewFeedGoogleTrendsNews from "./DataviewItemsPage.tsx";
 import DateSelectors from "./DateSelectors.tsx";
 
 const PAGE_SIZE = 50;
