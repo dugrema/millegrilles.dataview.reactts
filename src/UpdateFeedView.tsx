@@ -12,7 +12,7 @@ function UpdateFeedView() {
     const {userId, ready, workers} = useWorkers();
     const navigate = useNavigate();
 
-    const {data, error} = useGetFeedViews({feedId, feedViewId});
+    const {data, error, mutate} = useGetFeedViews({feedId, feedViewId});
     const [isAdmin, setIsAdmin] = useState<boolean>(false);
     const [viewConfiguration, setViewConfiguration] = useState({} as FeedViewType);
 
@@ -23,7 +23,7 @@ function UpdateFeedView() {
 
     const [feedName, feedView] = useMemo(()=>{
         let name = data?.feed?.info?.name;
-        const feedView = data?.views[0];
+        const feedView = data?.views?data.views[0]:null;
         if(!name) name = 'Private Feed';
         return [name, feedView];
     }, [data])
@@ -31,6 +31,7 @@ function UpdateFeedView() {
     const updateCallback = useCallback(async () => {
         if(!workers || !ready) throw new Error("Workers not initialized");
         if(!feedView) throw new Error("No feed view to update");
+        if(!feedId || !feedViewId) throw new Error("Feed id or Feed view id missing");
         console.debug("Save view configuration: ", viewConfiguration);
         if(!viewConfiguration.name) throw new Error('Missing name');
         const keyId = feedView.info?.encrypted_data?.cle_id;
@@ -54,9 +55,19 @@ function UpdateFeedView() {
         const response = await workers.connection.updateFeedView(viewConfigurationData);
         if(response.ok !== true) throw new Error('Error updating feed view: ' + response.err);
 
+        // Mutate view in SWR
+        if(data && data.views) {
+            const feedViews = [...data.views].map(item => {
+                if (item.info?.feed_view_id === feedViewId) return {...feedView, ...viewConfiguration};
+                return item;
+            });
+            const updatedData = {...data, views: feedViews};
+            await mutate(updatedData);
+        }
+
         // Go back to list
         navigate(`/dataviewer/private/feed/${feedId}/${feedViewId}`);
-    }, [workers, ready, navigate, viewConfiguration, feedView, feedId, feedViewId]);
+    }, [workers, ready, navigate, data, mutate, viewConfiguration, feedView, feedId, feedViewId]);
 
     useEffect(()=> {
         if(!workers || !ready) return;
@@ -94,7 +105,7 @@ function UpdateFeedView() {
         <section className='fixed top-10 md:top-12 left-0 right-0 px-2'>
             <h1 className="text-indigo-300 text-xl font-bold pb-2">{feedName}: Add feed view</h1>
 
-            <ConfigureView onChange={setViewConfiguration} init={data?.views[0]} />
+            <ConfigureView onChange={setViewConfiguration} init={data?.views?data.views[0]:null} />
 
             <div className="w-full text-center pt-6">
                 <ActionButton onClick={updateCallback} mainButton={true} disabled={!ready}>
