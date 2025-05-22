@@ -33,6 +33,7 @@ function UpdateFeedPage() {
     const [pollingRate, setPollingRate] = useState("");
     const [security, setSecurity] = useState("2.prive");
     const [customCode, setCustomCode] = useState("");
+    const [userAgent, setUserAgent] = useState("");
 
     // Prevent screen updates when starting to edit
     const [locked, setLocked] = useState(false);
@@ -50,7 +51,8 @@ function UpdateFeedPage() {
         setSecurity(feed.feed.security_level || "");
         setPollingRate(feed.feed.poll_rate?""+feed.feed.poll_rate:"");
         setCustomCode(feed.info?.custom_code || "");
-    }, [feed, locked, setLocked, setName, setUrl, setUsername, setPassword, setDecrypted, setActive, setPollingRate, setSecurity, setCustomCode]);
+        setUserAgent(feed.info?.user_agent || "");
+    }, [feed, locked, setLocked, setName, setUrl, setUsername, setPassword, setDecrypted, setActive, setPollingRate, setSecurity, setCustomCode, setUserAgent]);
 
     const addCallback = useCallback(async () => {
         if(!workers || !ready || !feed || !data) throw new Error('Connection not ready');
@@ -58,7 +60,7 @@ function UpdateFeedPage() {
         let pollRate: number | null = Number.parseInt(pollingRate);
         if(isNaN(pollRate)) pollRate = null;
 
-        const info = {name, url, auth_username: username, auth_password: password, custom_code: customCode};
+        const info = {name, url, auth_username: username, auth_password: password, custom_code: customCode, user_agent: userAgent};
         console.debug("Info mapped", info);
         const updatedFeed = {decrypt_in_database: decrypted, active, poll_rate: pollRate, security_level: security};
         const response = await generateUpdateCommands(workers, feed, info, updatedFeed);
@@ -78,7 +80,7 @@ function UpdateFeedPage() {
 
         // Go back to feeds
         navigate(`/dataviewer/private/feed/${feedId}`);
-    }, [workers, ready, data, feed, name, url, username, password, decrypted, active, pollingRate, security, navigate, mutate, feedId, customCode]);
+    }, [workers, ready, data, feed, name, url, username, password, decrypted, active, pollingRate, security, navigate, mutate, feedId, customCode, userAgent]);
 
     return (
         <div className='fixed top-10 md:top-12 left-0 right-0 px-2 bottom-10 overflow-y-auto'>
@@ -95,7 +97,8 @@ function UpdateFeedPage() {
                         password={password} setPassword={setPassword}
                         decrypted={decrypted} setDecrypted={setDecrypted}
                         security={security} setSecurity={setSecurity}
-                        customCode={customCode} setCustomCode={setCustomCode} />
+                        customCode={customCode} setCustomCode={setCustomCode}
+                        userAgent={userAgent} setUserAgent={setUserAgent} />
                 </div>
 
                 <div className="w-full text-center">
@@ -153,6 +156,8 @@ type FeedUpdateFieldsProps = {
     setSecurity: (value: string) => void,
     customCode: string,
     setCustomCode: (value: string) => void,
+    userAgent: string,
+    setUserAgent: (value: string) => void,
 }
 
 export function FeedUpdateFields(props: FeedUpdateFieldsProps) {
@@ -187,6 +192,10 @@ export function FeedUpdateFields(props: FeedUpdateFieldsProps) {
             <div id="decrypted-switch" className='col-span-3'>
                 <SwitchButton value={props.decrypted} onChange={props.setDecrypted} />
             </div>
+
+            <label htmlFor="user-agent">User agent (optional)</label>
+            <input id="user-agent" type="text" value={props.userAgent} onChange={e=>props.setUserAgent(e.target.value)}
+                   className='col-span-3 text-black w-full bg-slate-300 border-2 border-indigo-400'/>
 
             <label htmlFor="custom-code" className='col-span-4'>Custom Code</label>
             <textarea id="custom-code" rows={20} onChange={e=>props.setCustomCode(e.target.value)} value={props.customCode}
