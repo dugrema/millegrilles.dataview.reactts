@@ -91,14 +91,18 @@ function FeedTypeList(props: FeedTypeListProps) {
         if(data.feeds.length === 0) return (
             <p>No feeds.</p>
         );
-        return data.feeds.map(feed => {
+
+        const feeds = [...data.feeds];
+        feeds.sort(feedSort);
+
+        return feeds.map(feed => {
             let isEditable = isAdmin || !userId;
             if(!isEditable) isEditable = feed.feed.user_id === userId;
             return (
                 <FeedItem key={feed.feed.feed_id} value={feed}
                           onDelete={(isEditable&&!showDeleted)?deleteFeed:null}
                           onRestore={(isEditable&&showDeleted)?restoreFeed:null}
-                          className="odd:bg-indigo-600/30 even:bg-indigo-800/30 hover:bg-indigo-700 px-2 py-2 md:h-12" />
+                          className="odd:bg-indigo-600/30 even:bg-indigo-800/30 hover:bg-indigo-700 px-2 py-0 lg:py-1 md:h-12 lg:h-14 overflow-clip" />
             )
         });
     }, [data, deleteFeed, restoreFeed, isAdmin, userId, showDeleted]);
@@ -132,23 +136,29 @@ type FeedItemType = {
 
 function FeedItem(props: FeedItemType) {
     const {value, className} = props;
+    const feed = value.feed;
 
     const classNameInner = useMemo(()=>{
         let classNameInner = 'grid grid-cols-2 sm:grid-cols-6';
         if(className) classNameInner += ' ' + className;
+        if(!feed.active) classNameInner += ' text-slate-500';
         return classNameInner;
-    }, [className]);
+    }, [className, feed]);
 
     return (
         <Link to={`feed/${value.feed.feed_id}`} className={classNameInner}>
             <div className="col-span-6 md:col-span-2">{value.info?.name}</div>
-            <p className="col-span-3 md:col-span-2">{value.feed.feed_type}</p>
             <p className="sm:col-span-2 md:col-span-1">
-                {value.feed.active?'Active':'Inactive'}
+                {value.feed.active?
+                    <span>Active</span>
+                :
+                    <span className='text-slate-600'>Inactive</span>
+                }
                 {props.onDelete?<></>:
                     <span className='pl-1'>(Shared)</span>
                 }
             </p>
+            <p className="col-span-3 md:col-span-2">{value.info?.url}</p>
             <div className='text-right pr-2 col-span-4 sm:col-span-1'>
                 {props.onDelete?
                     <ActionButton onClick={props.onDelete} value={value.feed.feed_id} varwidth={8} confirm={true}>
@@ -163,4 +173,17 @@ function FeedItem(props: FeedItemType) {
             </div>
         </Link>
     )
+}
+
+function feedSort(a: DecryptedFeedType, b: DecryptedFeedType) {
+    if(a===b) return 0;
+    if(!a) return -1;
+    if(!b) return 1;
+    const nameA = a.info?.name, nameB = b.info?.name;
+    if(nameA !== nameB) {
+        if(!nameA) return -1;
+        if(!nameB) return 1;
+        return nameA.localeCompare(nameB);
+    }
+    return a.feed.feed_id.localeCompare(b.feed.feed_id);
 }
