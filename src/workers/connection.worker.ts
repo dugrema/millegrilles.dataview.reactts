@@ -135,9 +135,14 @@ export class AppsConnectionWorker extends ConnectionWorker {
         return await this.connection.sendCommand({feed_id: feedId}, DOMAIN_DATA_COLLECTOR_NAME, 'deleteFeed');
     }
 
-    async getFeeds(feedIds?: string[] | null): Promise<GetFeedsResponseType> {
+    async restoreFeed(feedId: string): Promise<MessageResponse> {
         if(!this.connection) throw new Error("Connection is not initialized");
-        return await this.connection.sendRequest({feed_ids: feedIds}, DOMAIN_DATA_COLLECTOR_NAME, 'getFeeds') as Promise<GetFeedsResponseType>;
+        return await this.connection.sendCommand({feed_id: feedId}, DOMAIN_DATA_COLLECTOR_NAME, 'restoreFeed');
+    }
+
+    async getFeeds(feedIds?: string[] | null, deleted?: boolean): Promise<GetFeedsResponseType> {
+        if(!this.connection) throw new Error("Connection is not initialized");
+        return await this.connection.sendRequest({feed_ids: feedIds, deleted}, DOMAIN_DATA_COLLECTOR_NAME, 'getFeeds') as Promise<GetFeedsResponseType>;
     }
 
     async createFeedView(feedView: FeedViewUpdateType, keyCommand: messageStruct.MilleGrillesMessage): Promise<MessageResponse> {

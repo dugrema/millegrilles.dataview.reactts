@@ -4,11 +4,20 @@ import {Link} from "react-router-dom";
 import {useWorkers} from "./workers/PrivateWorkerContextData.ts";
 
 import TrashIcon from './assets/trash-2-svgrepo-com.svg';
+import UndoIcon from './assets/undo-svgrepo-com.svg';
+
 import ActionButton from "./ActionButton.tsx";
 import {DecryptedFeedType, useGetFeeds} from "./GetFeeds.ts";
 import {useSWRConfig} from "swr";
 
 function PrivateFeeds() {
+
+    const [showDeleted, setShowDeleted] = useState(false);
+
+    const toggleDeletedCallback = useCallback(async () => {
+        setShowDeleted(!showDeleted);
+    }, [showDeleted, setShowDeleted]);
+
     return (
         <>
             <section className='fixed top-10 md:top-12 left-0 right-0 px-2'>
@@ -22,10 +31,14 @@ function PrivateFeeds() {
                       className="btn inline-block text-center text-slate-300 active:text-slate-800 bg-slate-600 hover:bg-indigo-800 active:bg-indigo-700">
                     Add feed
                 </Link>
+
+                <ActionButton onClick={toggleDeletedCallback} revertSuccessTimeout={2}>
+                    {showDeleted?'Show active':'Show deleted'}
+                </ActionButton>
             </section>
 
             <section className="w-full fixed top-32 bottom-10 px-2 overflow-y-auto">
-                <FeedTypeList />
+                <FeedTypeList showDeleted={showDeleted} />
             </section>
         </>
     );
@@ -33,11 +46,15 @@ function PrivateFeeds() {
 
 export default PrivateFeeds;
 
-function FeedTypeList() {
+type FeedTypeListProps = {showDeleted: boolean};
+
+function FeedTypeList(props: FeedTypeListProps) {
+    const {showDeleted} = props;
 
     const { mutate } = useSWRConfig();
     const {workers, ready, userId} = useWorkers();
-    const {data, error, isLoading} = useGetFeeds();
+
+    const {data, error, isLoading} = useGetFeeds({deleted: showDeleted});
 
     const [isAdmin, setIsAdmin] = useState<boolean>(false);
     useEffect(()=> {
@@ -59,6 +76,15 @@ function FeedTypeList() {
         await mutate(['feeds', undefined]);
     }, [workers, ready, mutate])
 
+    const restoreFeed = useCallback(async (e: React.MouseEvent<HTMLButtonElement>) => {
+        if(!workers || !ready) throw new Error('Workers not initialized');
+        console.debug("Deleting feed ", e.currentTarget.value);
+        const response = await workers.connection.restoreFeed(e.currentTarget.value);
+        if(!response.ok) throw new Error(`Error deleting feed: ${response.err}`);
+        // Force refresh of the full list
+        await mutate(['feeds', undefined]);
+    }, [workers, ready, mutate])
+
     const feedsElem = useMemo(()=>{
         if(!data) return [];
 
@@ -69,11 +95,13 @@ function FeedTypeList() {
             let isEditable = isAdmin || !userId;
             if(!isEditable) isEditable = feed.feed.user_id === userId;
             return (
-                <FeedItem key={feed.feed.feed_id} value={feed} onDelete={isEditable?deleteFeed:null}
+                <FeedItem key={feed.feed.feed_id} value={feed}
+                          onDelete={(isEditable&&!showDeleted)?deleteFeed:null}
+                          onRestore={(isEditable&&showDeleted)?restoreFeed:null}
                           className="odd:bg-indigo-600/30 even:bg-indigo-800/30 hover:bg-indigo-700 px-2 py-2 md:h-12" />
             )
         });
-    }, [data, deleteFeed, isAdmin, userId]);
+    }, [data, deleteFeed, restoreFeed, isAdmin, userId, showDeleted]);
 
     if(isLoading) {
         return <p>Feeds loading ...</p>;
@@ -81,7 +109,12 @@ function FeedTypeList() {
 
     return (
         <>
-            Feed list
+            {showDeleted?
+                <h2 className='text-red-700 text-lg font-bold pb-2'>Deleted feed list</h2>
+                :
+                <h2 className='text-indigo-300 text-lg font-bold pb-2'>Feed list</h2>
+            }
+
             {error && <p>{''+error}</p>}
             <div>
                 {feedsElem}
@@ -93,6 +126,7 @@ function FeedTypeList() {
 type FeedItemType = {
     value: DecryptedFeedType,
     onDelete?: ((e: React.MouseEvent<HTMLButtonElement>) => Promise<void>) | null,
+    onRestore?: ((e: React.MouseEvent<HTMLButtonElement>) => Promise<void>) | null,
     className?: string,
 };
 
@@ -121,6 +155,11 @@ function FeedItem(props: FeedItemType) {
                         <img src={TrashIcon} alt="Delete feed" className="w-8" />
                     </ActionButton>
                 :<></>}
+                {props.onRestore?
+                    <ActionButton onClick={props.onRestore} value={value.feed.feed_id} varwidth={8} confirm={true}>
+                        <img src={UndoIcon} alt="Delete feed" className="w-8" />
+                    </ActionButton>
+                    :<></>}
             </div>
         </Link>
     )

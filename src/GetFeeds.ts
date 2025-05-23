@@ -29,6 +29,7 @@ type UseGetFeedsDecryptedType = {
 
 export type UseGetFeedsProps = {
     feedId?: string | string[],
+    deleted?: boolean | null,
 }
 
 /**
@@ -41,7 +42,7 @@ export function useGetFeeds(props?: UseGetFeedsProps): UseGetFeedsDecryptedType 
     const [fetcherKey, fetcherFunction] = useMemo(()=>{
         if(!workers || !ready) return ['notReady', null];
 
-        const fetcherKey = ['feeds', props?.feedId];
+        const fetcherKey = ['feeds', props?.feedId, props?.deleted];
         const fetcherFunction = async () => fetchFeeds(workers, ready?ready:false, props);
         return [fetcherKey, fetcherFunction]
     }, [workers, ready, props]);
@@ -106,7 +107,8 @@ async function fetchFeeds(workers: AppWorkers | null | undefined, ready: boolean
         if(Array.isArray(props?.feedId)) feedIds = props?.feedId;
         else if(typeof(props?.feedId) === 'string') feedIds = [props.feedId];
 
-        const response = await workers.connection.getFeeds(feedIds);
+        const deleted = props?.deleted || false;
+        const response = await workers.connection.getFeeds(feedIds, deleted);
         if (!response.ok) throw new Error(`Error loading feeds: ${response.err}`);
         // console.debug("Get feeds response", response);
 
